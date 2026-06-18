@@ -227,6 +227,28 @@ input::placeholder, textarea::placeholder {
   line-height: 1.2;
 }
 
+/* Plasma Background Styling */
+.plasma-container {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 100%;
+  display: flex; justify-content: center; align-items: flex-end;
+  filter: blur(60px);
+}
+.plasma-blob-1 {
+  width: 50vw; height: 50vw; background: #9B72CB;
+  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+  position: absolute; bottom: -30vw; left: -10vw;
+}
+.plasma-blob-2 {
+  width: 45vw; height: 45vw; background: #FF2A6D;
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  position: absolute; bottom: -30vw; right: -5vw;
+}
+.plasma-blob-3 {
+  width: 35vw; height: 35vw; background: #05D9E8;
+  border-radius: 50% 50% 30% 70% / 50% 50% 70% 30%;
+  position: absolute; bottom: -25vw;
+}
+
 @media (max-width: 768px) {
   .left-nav-rail {
     display: none !important;
@@ -249,4 +271,32 @@ input::placeholder, textarea::placeholder {
     -webkit-text-fill-color: var(--text-primary) !important;
     color: var(--text-primary) !important;
   }
+  .plasma-container {
+    filter: blur(40px);
+  }
+  .plasma-blob-1 {
+    width: 160vw; height: 160vw; bottom: -100vw; left: -30vw;
+  }
+  .plasma-blob-2 {
+    width: 140vw; height: 140vw; bottom: -90vw; right: -20vw;
+  }
+  .plasma-blob-3 {
+    width: 120vw; height: 120vw; bottom: -80vw;
+  }
+}
+
+.ai-caret {
+  display: inline-block;
+  width: 3px;
+  height: 1.2em;
+  background: linear-gradient(180deg, #4285F4, #9B72CB);
+  border-radius: 2px;
+  vertical-align: text-bottom;
+  margin-left: 4px;
+  animation: msWordBlink 0.7s infinite alternate ease-in-out;
+}
+
+@keyframes msWordBlink {
+  0% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0; transform: scaleY(0.9); }
 }

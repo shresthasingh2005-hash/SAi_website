@@ -4,11 +4,44 @@ import { Sparkles, Send, User, ChevronDown, Activity, Heart, Frown, Coffee, Sett
 import ReactMarkdown from 'react-markdown';
 import './index.css';
 
+const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
+  const showTypingPlasma = isTyping && !isThinking && !hasMessages;
+  const showThinkingAura = isThinking;
+  const isIdle = hasMessages && !isThinking;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      <motion.div className="plasma-container" 
+        animate={{ opacity: showTypingPlasma ? 0.8 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.15 : 0.9 }}
+        transition={{ duration: 1.5, ease: "easeInOut" }}>
+        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360] }} transition={{ rotate: { repeat: Infinity, duration: 25, ease: 'linear' } }} />
+        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0] }} transition={{ rotate: { repeat: Infinity, duration: 30, ease: 'linear' } }} />
+        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360] }} transition={{ rotate: { repeat: Infinity, duration: 20, ease: 'linear' } }} />
+      </motion.div>
+
+      <motion.div animate={{ opacity: showThinkingAura ? 0.6 : 0, y: showThinkingAura ? 0 : -50 }} transition={{ duration: 1.2, ease: "easeInOut" }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '40vh', filter: 'blur(60px)', display: 'flex', justifyContent: 'center' }}>
+        <motion.div animate={{ x: ['-30vw', '30vw', '-30vw'], scale: [1, 1.2, 1] }} transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '40vw', height: '20vh', background: '#05D9E8', borderRadius: '50%', opacity: 0.8, marginTop: '-10vh' }} />
+        <motion.div animate={{ x: ['30vw', '-30vw', '30vw'], scale: [1.2, 1, 1.2] }} transition={{ duration: 5, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '50vw', height: '20vh', background: '#FF2A6D', borderRadius: '50%', opacity: 0.6, marginTop: '-5vh', position: 'absolute' }} />
+      </motion.div>
+
+      <motion.div animate={{ opacity: isIdle ? 1 : 0 }} transition={{ duration: 3, ease: "easeInOut" }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'space-between', filter: 'blur(90px)' }}>
+        <motion.div animate={{ opacity: [0.2, 0.4, 0.2] }} transition={{ duration: 10, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '30vw', height: '50vh', background: '#4285F4', borderRadius: '50%', marginLeft: '-15vw', marginTop: '-10vh' }} />
+        <motion.div animate={{ opacity: [0.15, 0.3, 0.15] }} transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '40vw', height: '40vh', background: '#9B72CB', borderRadius: '50%', marginRight: '-20vw', bottom: '-10vh', position: 'absolute', right: 0 }} />
+      </motion.div>
+    </div>
+  );
+};
+
 export default function App() {
   const defaultApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
-  const defaultInitialMessage = { role: 'model', content: "Hey Sahityaka. I was just thinking about you. How are you feeling today? ☕" };
 
   const [chatSessions, setChatSessions] = useState(() => {
     try {
@@ -567,6 +600,8 @@ Example:
       {/* Main Content Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
         
+        <AuraSystem isTyping={isFocused || input.trim() !== ''} isThinking={isThinking || isLoading} hasMessages={messages.length > 0} />
+
         {/* Mobile Header */}
         <div className="mobile-header">
           <button className="icon-btn" onClick={() => setIsSidebarOpen(true)} title="Menu">
@@ -592,11 +627,8 @@ Example:
           </div>
         ) : (
           <>
-            <div
-              ref={chatContainerRef}
-              onScroll={handleScroll}
-              style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 10px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}
-            >
+            <div onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', display: 'flex', justifyContent: 'center' }}>
+              <div ref={chatContainerRef} style={{ width: '100%', maxWidth: '800px', padding: '20px 20px 10px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
               {messages.map((msg, i) => (
                 <div key={i} style={{ display: 'flex', gap: '12px', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                   {msg.role === 'model' && (
@@ -614,8 +646,11 @@ Example:
                     {msg.role === 'user' ? (
                       <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{msg.content}</div>
                     ) : (
-                      <div className="markdown-body">
+                      <div className="markdown-body" style={{ position: 'relative' }}>
                         <ReactMarkdown>{renderMessageContent(msg.content)}</ReactMarkdown>
+                        {isLoading && i === messages.length - 1 && (
+                          <span className="ai-caret"></span>
+                        )}
                       </div>
                     )}
                   </div>
@@ -627,14 +662,15 @@ Example:
                     <Sparkles size={16} color="#ffffff" />
                   </div>
                   <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} style={{ display: 'flex', alignItems: 'center' }}>
-                      <Activity size={16} color="var(--text-secondary)" />
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} style={{ display: 'flex', alignItems: 'center' }}>
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', boxShadow: '0 0 10px rgba(155, 114, 203, 0.8)' }} />
                     </motion.div>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Thinking...</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }} className="gemini-gradient-text">Processing...</span>
                   </div>
                 </div>
               )}
               <div ref={chatEndRef} style={{ height: '1px', flexShrink: 0 }} />
+              </div>
             </div>
 
             {/* Scroll to bottom arrow */}
