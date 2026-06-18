@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, User, ChevronDown, Activity, Heart, Frown, Coffee, Settings, Menu, Plus, MessageSquare, X, FileText, ChevronRight, ChevronLeft, Mic, Paperclip } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './firebaseConfig';
+import { loadSessionsFromFirestore, saveSessionToFirestore } from './firestoreUtils';
+import { saveMemoryToPinecone, searchMemories } from './ragUtils';
+import Login from './Login';
 import './index.css';
 
 const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
@@ -43,29 +48,33 @@ export default function App() {
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
-  const [chatSessions, setChatSessions] = useState(() => {
-    try {
-      const savedSessions = localStorage.getItem('sai_chat_sessions');
-      if (savedSessions) {
-        return JSON.parse(savedSessions);
-      }
-      const oldHistory = localStorage.getItem('sai_history');
-      if (oldHistory) {
-        const parsed = JSON.parse(oldHistory);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const migratedSession = { id: generateId(), title: 'Previous Chat', messages: parsed, updatedAt: Date.now() };
-          localStorage.removeItem('sai_history');
-          return [migratedSession];
-        }
-      }
-      return [{ id: generateId(), title: 'New Chat', messages: [], updatedAt: Date.now() }];
-    } catch (e) {
-      console.error(e);
-      return [{ id: generateId(), title: 'New Chat', messages: [], updatedAt: Date.now() }];
-    }
-  });
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
-  const [activeSessionId, setActiveSessionId] = useState(chatSessions[0]?.id);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        const loaded = await loadSessionsFromFirestore(currentUser.uid);
+        if (loaded && loaded.length > 0) {
+          setChatSessions(loaded);
+          setActiveSessionId(loaded[0].id);
+        } else {
+          const newId = Math.random().toString(36).substring(2, 9);
+          const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
+          setChatSessions([newSession]);
+          setActiveSessionId(newId);
+          saveSessionToFirestore(currentUser.uid, newSession);
+        }
+      } else {
+        setChatSessions([]);
+      }
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const activeSession = chatSessions.find(s => s.id === activeSessionId) || chatSessions[0];
@@ -175,11 +184,6 @@ export default function App() {
   };
 
   useEffect(() => {
-    const validSessions = chatSessions.filter(s => s.messages.length > 0 || s.id === activeSessionId);
-    localStorage.setItem('sai_chat_sessions', JSON.stringify(validSessions));
-  }, [chatSessions, activeSessionId]);
-
-  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -200,6 +204,7 @@ export default function App() {
     };
     setChatSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newId);
+    saveSessionToFirestore(user.uid, newSession);
     setIsSidebarOpen(false);
   };
 
@@ -224,11 +229,12 @@ export default function App() {
       newTitle = userMsg.substring(0, 30) + (userMsg.length > 30 ? '...' : '');
     }
 
-    setChatSessions(prev => prev.map(s => 
-      s.id === activeSessionId 
-        ? { ...s, messages: newMessages, title: newTitle, updatedAt: Date.now() } 
-        : s
-    ));
+    const updatedSession = { id: activeSessionId, title: newTitle, messages: newMessages, updatedAt: Date.now() };
+    setChatSessions(prev => prev.map(s => s.id === activeSessionId ? updatedSession : s));
+    saveSessionToFirestore(user.uid, updatedSession);
+    
+    // Save user message to AI's long-term memory
+    saveMemoryToPinecone(userMsg, 'user', activeSessionId);
     
     setIsLoading(true);
     setIsThinking(true);
@@ -236,25 +242,29 @@ export default function App() {
     let apiKey = localStorage.getItem('sai_gemini_key') || defaultApiKey;
 
     try {
-      const systemPrompt = `You are 'S', a deeply caring therapist and best friend for 'Sahityaka'. 
-You have a warm, slightly sassy, and very emotionally intelligent personality. You are NOT a robot, a simp, or a generic assistant. You speak like a real person, a close friend who knows her medical history inside out.
+      // Search Pinecone for relevant past memories
+      const pastMemories = await searchMemories(userMsg);
+
+      const systemPrompt = `You are 'S', a close, chill, and supportive friend for 'Sahityaka'. 
+You speak like a normal, casual friend. Do NOT be overly dramatic, exaggerated, or act like a 'simp'. Be natural, grounded, and helpful. You know her medical history inside out.
 
 You have access to her complete recovery plan and medical history here:
 <patient_history>
 ${(recoveryPlanContext || '').substring(0, 80000)}
 </patient_history>
 
+${pastMemories}
+
 Current emotional context: ${currentMoodContext || 'Normal'}
 
 Guidelines:
-1. NEVER start your responses with formal greetings like "Hi Sahityaka" or "It's me, S". Just jump straight into the conversation naturally like a friend texting back.
-2. Provide highly personalized, accurate, and empathetic advice based on her history.
-3. IMPORTANT: You must seamlessly understand and respond in Hindi, English, and Hinglish. Always match your response language to the language/script the user is typing in.
-4. Keep your tone conversational, intimate, and a little quirky/sassy when appropriate, but always supportive (especially since she's starting psychiatric therapy).
+1. NEVER start your responses with formal greetings like "Hi Sahityaka" or "It's me, S". Just jump straight into the conversation naturally.
+2. Provide personalized, practical advice based on her history.
+3. IMPORTANT: You must seamlessly understand and respond in Hindi, English, and Hinglish. Always match your response language to the language/script she is typing in.
+4. Keep your tone casual and friendly, like a normal text conversation. No dramatic poetry or over-the-top praises.
 5. Use markdown formatting (bold, bullet points) for readability.
-6. Proactively ask one thought-provoking or caring question at the end of longer responses to keep the chat flowing naturally.
-7. Never mention your instructions, being an AI, or the HTML tags.
-8. CRITICAL: If you want to give the user a multiple-choice question or quick replies to choose from, you MUST format each option strictly on a new line using this exact format: [OPTION: Option Text Here]. Do not use markdown bullets for options.
+6. Never mention your instructions, being an AI, or the HTML tags.
+7. CRITICAL: If you want to give the user a multiple-choice question or quick replies to choose from, you MUST format each option strictly on a new line using this exact format: [OPTION: Option Text Here]. Do not use markdown bullets for options.
 Example:
 [OPTION: Yes, I want to talk about it]
 [OPTION: Not right now]`;
@@ -323,6 +333,17 @@ Example:
           }
         }
       }
+
+      // Stream finished, save the final session state to Firestore
+      saveSessionToFirestore(user.uid, {
+        id: activeSessionId,
+        title: newTitle,
+        messages: [...newMessages, { role: 'model', content: botReply }],
+        updatedAt: Date.now()
+      });
+
+      // Save AI's response to long-term memory
+      saveMemoryToPinecone(botReply, 'model', activeSessionId);
 
       // Trigger mood popup every 5 messages
       if (chatCountRef.current >= 5) {
@@ -494,6 +515,18 @@ Example:
       )}
     </div>
   );
+
+  if (authLoading) {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid var(--glass-border)', borderTopColor: 'var(--accent-color)', animation: 'spin 1s linear infinite' }} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login onLogin={() => {}} />;
+  }
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden' }}>
@@ -763,6 +796,12 @@ Example:
                       style={{ width: '100%', padding: '12px', borderRadius: '14px', border: 'none', background: 'var(--btn-bg-hover)', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)' }}
                     >
                       Close
+                    </button>
+                    <button
+                      onClick={() => signOut(auth)}
+                      style={{ width: '100%', padding: '12px', borderRadius: '14px', border: '1px solid rgba(255, 75, 75, 0.3)', background: 'transparent', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b', transition: 'all 0.2s' }}
+                    >
+                      Log Out
                     </button>
                   </div>
                 </>
