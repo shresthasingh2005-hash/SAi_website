@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>S - Sahityaka's Health AI</title>
+</head>
+
+<body>
+  <div id="error-box" style="color: red; position: fixed; top: 10px; left: 10px; z-index: 9999; background: white; padding: 10px; border: 1px solid red; display: none;"></div>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      const box = document.getElementById('error-box');
+      box.style.display = 'block';
+      box.innerHTML += '<p><strong>Error:</strong> ' + msg + '<br>Line: ' + line + '<br>Stack: ' + (error ? error.stack : '') + '</p>';
+      return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      const box = document.getElementById('error-box');
+      box.style.display = 'block';
+      box.innerHTML += '<p><strong>Promise Error:</strong> ' + event.reason + '</p>';
+    });
+  </script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

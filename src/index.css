@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Roboto:wght@300;400;500&display=swap');
+
+:root {
+  /* Gemini-Inspired Theme - Light */
+  --bg-color: #FFFFFF; 
+  --text-primary: #1F1F1F;
+  --text-secondary: #444746;
+  
+  /* Bubbles */
+  --user-msg-bg: #F0F4F9;
+  --user-msg-text: #1F1F1F;
+  --bot-msg-bg: transparent; /* No background for bot */
+  
+  /* UI Elements */
+  --accent-color: #4285F4; /* Google Blue */
+  --btn-bg: #F0F4F9;
+  --btn-bg-hover: #E8EAED;
+  
+  /* Sidebar */
+  --sidebar-bg: #F0F4F9;
+  
+  /* Shadows */
+  --subtle-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+[data-theme="dark"] {
+  /* Gemini-Inspired Theme - Dark */
+  --bg-color: #131314; /* Deep Space Grey */
+  --text-primary: #E3E3E3;
+  --text-secondary: #C4C7C5;
+  
+  /* Bubbles */
+  --user-msg-bg: #1E1F20;
+  --user-msg-text: #E3E3E3;
+  --bot-msg-bg: transparent;
+  
+  /* UI Elements */
+  --accent-color: #A8C7FA; /* Lighter blue for dark mode */
+  --btn-bg: #1E1F20;
+  --btn-bg-hover: #282A2C;
+  
+  /* Sidebar */
+  --sidebar-bg: #1E1F20;
+  
+  /* Shadows */
+  --subtle-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Using Google-like font stack */
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow: hidden; 
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease;
+}
+
+/* Gemini Subtle Glow Background */
+.gemini-bg-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(20, 40, 80, 0.4) 0%, transparent 60%);
+  z-index: 0;
+}
+
+/* Gemini Animated Gradient Text */
+.gemini-gradient-text {
+  background: linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%);
+  background-size: 200% auto;
+  color: #000;
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 4s linear infinite;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* Base Panel (used for Sidebar and Input Pill) */
+.base-panel {
+  background: var(--bg-color);
+  transition: background-color 0.3s ease;
+}
+
+.sidebar-panel {
+  background: var(--sidebar-bg);
+}
+
+/* Buttons */
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background-color 0.2s ease;
+  border-radius: 50%;
+}
+.icon-btn:hover {
+  background: var(--btn-bg-hover);
+  color: var(--text-primary);
+}
+
+/* Markdown styling inside messages */
+.markdown-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: 'Roboto', sans-serif; /* Readability font */
+  color: var(--text-primary);
+}
+.markdown-body p {
+  margin-bottom: 1em;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+.markdown-body ul, .markdown-body ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+.markdown-body li {
+  margin-bottom: 0.5em;
+}
+.markdown-body strong {
+  font-weight: 600;
+}
+
+/* Scrollbar styling - Minimal */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--btn-bg-hover);
+  border-radius: 10px;
+}
+
+/* Input text base font size to prevent mobile zoom */
+input[type="text"], textarea {
+  font-size: 16px !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 0.5 !important;
+}
+
+/* Scroll down button */
+.scroll-down-btn {
+  position: absolute;
+  bottom: 100px;
+  right: 50%;
+  transform: translateX(50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-color);
+  border: 1px solid var(--btn-bg-hover);
+  box-shadow: var(--subtle-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+.scroll-down-btn:hover {
+  background: var(--btn-bg);
+}
+
+.emoji-btn {
+  font-size: 2rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  padding: 12px;
+}
+.emoji-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Caret blinking animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typing-caret {
+  width: 2px;
+  background-color: var(--accent-color);
+  border-radius: 2px;
+  animation: blink 1s step-end infinite;
+}
+
+/* Responsive layout for mobile */
+.mobile-header {
+  display: none;
+}
+
+.gemini-greeting-text {
+  font-size: 3.5rem;
+  font-weight: 500;
+  margin-bottom: 32px;
+  letter-spacing: -1px;
+  text-align: center;
+  margin: 0 0 32px 0;
+  line-height: 1.2;
+}
+
+@media (max-width: 768px) {
+  .left-nav-rail {
+    display: none !important;
+  }
+  .mobile-header {
+    display: flex !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+  }
+  .gemini-greeting-text {
+    font-size: 2.2rem;
+    margin-bottom: 48px;
+    background: none !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    color: var(--text-primary) !important;
+  }
+}
