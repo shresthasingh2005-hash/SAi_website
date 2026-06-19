@@ -9,11 +9,11 @@ const PINECONE_URL = "/pinecone";
 export const generateEmbedding = async (text) => {
   if (!text || text.trim().length === 0) return null;
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: "models/text-embedding-004",
+        model: "models/gemini-embedding-2",
         content: { parts: [{ text: text }] }
       })
     });
