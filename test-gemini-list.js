@@ -1,5 +1,5 @@
 async function listModels() {
-  const GEMINI_API_KEY = "AQ.Ab8RN6Iit-PRNlccAds62808SKCM_vJ_GvUMheFGpSH9ljkMCw";
+  const GEMINI_API_KEY = "AQ.Ab8RN6KGlS0-LqZ3izGRxnf4VNhcx0yxCTNJ8gkw6nc79go4rw";
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`);
     console.log("Status:", response.status);

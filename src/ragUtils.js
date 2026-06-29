@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('sai_gemini_key');
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const PINECONE_API_KEY = import.meta.env.VITE_PINECONE_API_KEY;
 // Using Vite proxy in development, and Vercel rewrites in production
 const PINECONE_URL = "/pinecone";

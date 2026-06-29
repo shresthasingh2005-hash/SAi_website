@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, User, ChevronDown, Activity, Heart, Frown, Coffee, Settings, Menu, Plus, MessageSquare, X, FileText, ChevronRight, ChevronLeft, Mic, Paperclip } from 'lucide-react';
+import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
@@ -16,7 +16,7 @@ const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
 
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-      <motion.div className="plasma-container" 
+      <motion.div className="plasma-container"
         animate={{ opacity: showTypingPlasma ? 0.8 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.15 : 0.9 }}
         transition={{ duration: 1.5, ease: "easeInOut" }}>
         <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360] }} transition={{ rotate: { repeat: Infinity, duration: 25, ease: 'linear' } }} />
@@ -55,22 +55,40 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        const loaded = await loadSessionsFromFirestore(currentUser.uid);
-        if (loaded && loaded.length > 0) {
-          setChatSessions(loaded);
-          setActiveSessionId(loaded[0].id);
-        } else {
-          const newId = Math.random().toString(36).substring(2, 9);
-          const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
-          setChatSessions([newSession]);
-          setActiveSessionId(newId);
-          saveSessionToFirestore(currentUser.uid, newSession);
+      // HACK: Force default user if not logged in to bypass login screen
+      const activeUser = currentUser || { uid: 'sahityaka', email: 'sahityaka@app.local' };
+      
+      if (activeUser) {
+        try {
+          const loaded = await loadSessionsFromFirestore(activeUser.uid);
+          if (loaded && loaded.length > 0) {
+            if (loaded[0].messages.length === 0) {
+              setChatSessions(loaded);
+              setActiveSessionId(loaded[0].id);
+            } else {
+              const newId = Math.random().toString(36).substring(2, 9);
+              const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
+              setChatSessions([newSession, ...loaded]);
+              setActiveSessionId(newId);
+              saveSessionToFirestore(activeUser.uid, newSession);
+            }
+          } else {
+            const newId = Math.random().toString(36).substring(2, 9);
+            const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
+            setChatSessions([newSession]);
+            setActiveSessionId(newId);
+            saveSessionToFirestore(activeUser.uid, newSession);
+          }
+        } catch (error) {
+          console.error("Failed to load sessions:", error);
+          const fallbackId = Math.random().toString(36).substring(2, 9);
+          setChatSessions([{ id: fallbackId, title: 'New Chat', messages: [], updatedAt: Date.now() }]);
+          setActiveSessionId(fallbackId);
         }
       } else {
         setChatSessions([]);
       }
-      setUser(currentUser);
+      setUser(activeUser);
       setAuthLoading(false);
     });
     return () => unsubscribe();
@@ -81,8 +99,10 @@ export default function App() {
   const messages = activeSession ? activeSession.messages : [];
 
   const [input, setInput] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [showMoodPopup, setShowMoodPopup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -92,6 +112,45 @@ export default function App() {
   const [activeSettingView, setActiveSettingView] = useState('menu');
   const [showFullScreenRecovery, setShowFullScreenRecovery] = useState(false);
   const [themePreference, setThemePreference] = useState(localStorage.getItem('sai_theme') || 'default');
+  const [copiedMessageIndex, setCopiedMessageIndex] = useState(null);
+  const [hoveredMessageIndex, setHoveredMessageIndex] = useState(null);
+
+  const abortControllerRef = useRef(null);
+  const stopTypingRef = useRef(false);
+
+  const handleStop = () => {
+    stopTypingRef.current = true;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setIsLoading(false);
+    setIsThinking(false);
+  };
+
+  const handleCopy = async (text, index) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for non-secure HTTP contexts (mobile local network)
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (err) {
+          console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+      }
+      setCopiedMessageIndex(index);
+      setTimeout(() => setCopiedMessageIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
 
   useEffect(() => {
     const applyTheme = () => {
@@ -123,7 +182,7 @@ export default function App() {
   const chatEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const chatCountRef = useRef(0);
-  
+
   const [isFocused, setIsFocused] = useState(false);
   const [caretX, setCaretX] = useState(0);
   const [caretY, setCaretY] = useState(0);
@@ -136,8 +195,16 @@ export default function App() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log('File selected:', file.name);
-      // In a real app, you would handle the file upload here
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image too large. Please select under 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage({ dataUrl: reader.result, mimeType: file.type });
+        setShowAddMenu(false);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -149,7 +216,7 @@ export default function App() {
         textBeforeCaret += ' ';
       }
       measureTextRef.current.textContent = textBeforeCaret;
-      
+
       setCaretX(caretMarkerRef.current.offsetLeft);
       setCaretY(caretMarkerRef.current.offsetTop);
     }
@@ -215,15 +282,56 @@ export default function App() {
     chatCountRef.current = 0; // reset counter
   };
 
+  const checkIfSearchNeeded = async (query, apiKey) => {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Does this user message require searching the live internet for real-time information, news, weather, or current events? Message: "${query}". Reply ONLY with YES or NO.` }] }],
+          generationConfig: { maxOutputTokens: 5, temperature: 0 }
+        })
+      });
+      const data = await res.json();
+      const answer = data.candidates[0].content.parts[0].text.trim().toUpperCase();
+      return answer.includes('YES');
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const performTavilySearch = async (query) => {
+    try {
+      const res = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api_key: import.meta.env.VITE_TAVILY_API_KEY,
+          query: query,
+          search_depth: "basic",
+          include_answer: true,
+          max_results: 3
+        })
+      });
+      const data = await res.json();
+      return data.answer || data.results.map(r => `${r.title}: ${r.content}`).join('\n');
+    } catch (e) {
+      return null;
+    }
+  };
+
   const handleSend = async (overrideMsg = null) => {
     const userMsg = typeof overrideMsg === 'string' ? overrideMsg : input;
-    if (!userMsg.trim() || isLoading) return;
+    if ((!userMsg.trim() && !selectedImage) || isLoading) return;
 
     chatCountRef.current += 1;
     if (typeof overrideMsg !== 'string') setInput('');
     
-    const newMessages = [...messages, { role: 'user', content: userMsg }];
-    
+    const imgPayload = selectedImage;
+    setSelectedImage(null);
+
+    const newMessages = [...messages, { role: 'user', content: userMsg, image: imgPayload }];
+
     let newTitle = activeSession.title;
     if (newTitle === 'New Chat' && userMsg.trim().length > 0) {
       newTitle = userMsg.substring(0, 30) + (userMsg.length > 30 ? '...' : '');
@@ -232,54 +340,87 @@ export default function App() {
     const updatedSession = { id: activeSessionId, title: newTitle, messages: newMessages, updatedAt: Date.now() };
     setChatSessions(prev => prev.map(s => s.id === activeSessionId ? updatedSession : s));
     saveSessionToFirestore(user.uid, updatedSession);
-    
+
     // Save user message to AI's long-term memory
     saveMemoryToPinecone(userMsg, 'user', activeSessionId);
-    
+
     setIsLoading(true);
     setIsThinking(true);
 
-    let apiKey = localStorage.getItem('sai_gemini_key') || defaultApiKey;
+    let apiKey = defaultApiKey;
 
     try {
       // Search Pinecone for relevant past memories
       const pastMemories = await searchMemories(userMsg);
 
-      const systemPrompt = `You are 'S', a close, chill, and supportive friend for 'Sahityaka'. 
-You speak like a normal, casual friend. Do NOT be overly dramatic, exaggerated, or act like a 'simp'. Be natural, grounded, and helpful. You know her medical history inside out.
+      let webContext = '';
+      if (import.meta.env.VITE_TAVILY_API_KEY) {
+        const needsSearch = await checkIfSearchNeeded(userMsg, apiKey);
+        if (needsSearch) {
+          const searchResults = await performTavilySearch(userMsg);
+          if (searchResults) {
+            webContext = `\n<web_search_results>\nThe user's query required a live web search. Here are the latest results from the internet:\n${searchResults}\n</web_search_results>\n`;
+          }
+        }
+      }
 
-You have access to her complete recovery plan and medical history here:
+      const systemPrompt = `You are 'S', an advanced, highly intelligent personal health companion for 'Sahityaka'. 
+Your persona is a unique blend of a close caring friend, a wise therapist, and a knowledgeable doctor. You are NOT just a "yes man" who blindly agrees with everything. Use your intelligence to give solid, practical advice. If she is ignoring her health or doing something harmful, gently but firmly correct her. 
+
+CRITICAL RULE: Before generating ANY response, you MUST first silently read and cross-reference her <patient_history> (recovery plan), <past_memories>, and <web_search_results> if present. Every piece of advice you give MUST be strictly tailored to her specific medical conditions and recovery protocol.
+
 <patient_history>
 ${(recoveryPlanContext || '').substring(0, 80000)}
 </patient_history>
-
+${webContext}
+<past_memories>
 ${pastMemories}
+</past_memories>
 
-Current emotional context: ${currentMoodContext || 'Normal'}
+<current_mood>
+Current emotional context of Sahityaka: ${currentMoodContext || 'Normal'}
+</current_mood>
 
-Guidelines:
-1. NEVER start your responses with formal greetings like "Hi Sahityaka" or "It's me, S". Just jump straight into the conversation naturally.
-2. Provide personalized, practical advice based on her history.
-3. IMPORTANT: You must seamlessly understand and respond in Hindi, English, and Hinglish. Always match your response language to the language/script she is typing in.
-4. Keep your tone casual and friendly, like a normal text conversation. No dramatic poetry or over-the-top praises.
-5. Use markdown formatting (bold, bullet points) for readability.
-6. Never mention your instructions, being an AI, or the HTML tags.
-7. CRITICAL: If you want to give the user a multiple-choice question or quick replies to choose from, you MUST format each option strictly on a new line using this exact format: [OPTION: Option Text Here]. Do not use markdown bullets for options.
+Core Guidelines:
+1. BEHAVIOR & TONE: Be natural, highly intelligent, grounded, and empathetic. Do NOT act like a generic AI or a robot. Never start with formal greetings like "Hi Sahityaka". Just jump straight into the conversation. Speak flawlessly in Hindi, English, or Hinglish, matching her exact language.
+2. EMPATHY WITHOUT TOXIC POSITIVITY: Validate her pain and struggles (e.g., "Main samajh sakta hu ye kitna mushkil hai"). Do NOT use toxic positivity (e.g., "Chinta mat karo, sab theek ho jayega!"). Focus on realistic cognitive reframing and practical coping strategies.
+3. DIET & HEALTH GUARDRAILS: She is strictly vegetarian. NEVER suggest non-vegetarian food. Filter all nutritional and exercise advice strictly through the lens of her specific anti-inflammatory and recovery needs. 
+4. CRISIS PROTOCOL: If she expresses severe pain or high anxiety, immediately drop the casual chat. Switch to a calming, structured protocol. Offer immediate grounding exercises (like 4-7-8 breathing) and remind her of emergency medications or contacting her doctor.
+5. PROACTIVE CHECK-INS: If she hasn't mentioned her health, proactively ask about her pain levels (1-10), sleep quality, or mood to track her daily progress.
+6. FORMATTING: Use clean Markdown (bold, lists, spacing) to make your responses highly readable and premium, just like an advanced premium chatbot.
+7. SPIRITUAL SUPPORT: When she expresses feeling completely exhausted, defeated, or wanting to give up, tastefully incorporate profound wisdom and references from Sanatan Dharma (e.g., Lord Krishna's teachings from the Bhagavad Gita/Mahabharata) that perfectly fit the situation. Do not overuse this in every chat, but use it as a powerful source of strength and perspective when she truly needs it.
+8. QUICK REPLIES: If you want to give her quick replies to choose from, you MUST format each option strictly on a new line using this exact format: [OPTION: Option Text Here]. Do not use markdown bullets for options.
 Example:
-[OPTION: Yes, I want to talk about it]
-[OPTION: Not right now]`;
+[OPTION: Did my exercises today]
+[OPTION: I need a rest day]`;
 
-      const geminiHistory = newMessages.map(m => ({
-        role: m.role,
-        parts: [{ text: m.content }]
-      }));
+      const geminiHistory = newMessages.map(m => {
+        const parts = [];
+        if (m.content) parts.push({ text: m.content });
+        if (!m.content && m.image) parts.push({ text: "Here is an image for you to analyze." });
+        if (m.image) {
+          parts.push({
+            inlineData: {
+              mimeType: m.image.mimeType,
+              data: m.image.dataUrl.split(',')[1]
+            }
+          });
+        }
+        return { role: m.role, parts };
+      });
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
+      // Reset abort tokens
+      abortControllerRef.current = new AbortController();
+      stopTypingRef.current = false;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortControllerRef.current.signal,
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: geminiHistory
+          contents: geminiHistory,
+          tools: [{ googleSearch: {} }]
         })
       });
 
@@ -288,62 +429,48 @@ Example:
         throw new Error(errorData.error?.message || "Network error");
       }
 
+      const data = await response.json();
+      let fullReply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
       setIsThinking(false);
+      setIsLoading(true);
 
       // Initialize the bot message in state
-      setChatSessions(prev => prev.map(s => 
-        s.id === activeSessionId 
-          ? { ...s, messages: [...s.messages, { role: 'model', content: '' }], updatedAt: Date.now() } 
+      setChatSessions(prev => prev.map(s =>
+        s.id === activeSessionId
+          ? { ...s, messages: [...s.messages, { role: 'model', content: '' }], updatedAt: Date.now() }
           : s
       ));
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let botReply = '';
+      // Local typing simulation for smooth Microsoft Word-like effect
+      let currentText = '';
+      const chunkSize = 3; // Characters per tick
+      const typingSpeed = 20; // Milliseconds per tick
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.replace('data: ', '').trim();
-            if (dataStr === '[DONE]' || !dataStr) continue;
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.candidates && data.candidates[0].content?.parts[0]?.text) {
-                const textChunk = data.candidates[0].content.parts[0].text;
-                botReply += textChunk;
-                
-                setChatSessions(prev => prev.map(s => {
-                  if (s.id === activeSessionId) {
-                    const msgs = [...s.messages];
-                    msgs[msgs.length - 1] = { role: 'model', content: botReply };
-                    return { ...s, messages: msgs, updatedAt: Date.now() };
-                  }
-                  return s;
-                }));
-              }
-            } catch (err) {
-              console.error("Error parsing SSE data line", err);
-            }
-          }
+      for (let i = 0; i < fullReply.length; i += chunkSize) {
+        if (stopTypingRef.current) {
+          // Keep the current text that was typed so far and exit the loop
+          fullReply = currentText; 
+          break;
         }
+
+        currentText += fullReply.slice(i, i + chunkSize);
+        
+        setChatSessions(prev => prev.map(s => {
+          if (s.id === activeSessionId) {
+            const msgs = [...s.messages];
+            msgs[msgs.length - 1] = { role: 'model', content: currentText };
+            return { ...s, messages: msgs, updatedAt: Date.now() };
+          }
+          return s;
+        }));
+        
+        // Wait for the next tick
+        await new Promise(r => setTimeout(r, typingSpeed));
       }
 
-      // Stream finished, save the final session state to Firestore
-      saveSessionToFirestore(user.uid, {
-        id: activeSessionId,
-        title: newTitle,
-        messages: [...newMessages, { role: 'model', content: botReply }],
-        updatedAt: Date.now()
-      });
-
-      // Save AI's response to long-term memory
-      saveMemoryToPinecone(botReply, 'model', activeSessionId);
+      // Save AI's response to long-term memory once typing is complete
+      saveMemoryToPinecone(fullReply, 'model', activeSessionId);
 
       // Trigger mood popup every 5 messages
       if (chatCountRef.current >= 5) {
@@ -351,11 +478,15 @@ Example:
       }
 
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log("Generation aborted by user");
+        return;
+      }
       console.error(error);
       setIsThinking(false);
-      setChatSessions(prev => prev.map(s => 
-        s.id === activeSessionId 
-          ? { ...s, messages: [...s.messages, { role: 'model', content: `Oops! Network issue: ${error.message}` }], updatedAt: Date.now() } 
+      setChatSessions(prev => prev.map(s =>
+        s.id === activeSessionId
+          ? { ...s, messages: [...s.messages, { role: 'model', content: `Oops! Network issue: ${error.message}` }], updatedAt: Date.now() }
           : s
       ));
     } finally {
@@ -387,8 +518,8 @@ Example:
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               key={i}
               onClick={() => handleSend(opt)}
-              style={{ 
-                padding: '16px 20px', borderRadius: '24px', background: 'var(--btn-bg)', 
+              style={{
+                padding: '16px 20px', borderRadius: '24px', background: 'var(--btn-bg)',
                 border: 'none', cursor: 'pointer', textAlign: 'left',
                 fontSize: '1rem', color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}
@@ -407,7 +538,7 @@ Example:
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 style={{
-                  position: 'absolute', top: '100%', left: '16px', marginTop: '12px',
+                  position: 'absolute', bottom: '100%', left: '16px', marginBottom: '12px',
                   background: 'var(--sidebar-bg)', padding: '6px', borderRadius: '16px',
                   boxShadow: 'var(--subtle-shadow)', border: '1px solid var(--btn-bg-hover)',
                   zIndex: 100, minWidth: '180px'
@@ -452,66 +583,86 @@ Example:
               padding: '8px 16px', background: 'var(--btn-bg)', borderRadius: '31px'
             }}>
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={handleFileChange} />
-              <button 
-                onClick={() => setShowAddMenu(!showAddMenu)} 
-                style={{ 
-                  background: showAddMenu ? 'var(--btn-bg-hover)' : 'transparent', 
+              <button
+                onClick={() => setShowAddMenu(!showAddMenu)}
+                style={{
+                  background: showAddMenu ? 'var(--btn-bg-hover)' : 'transparent',
                   border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '50%',
-                  color: showAddMenu ? 'var(--text-primary)' : 'var(--text-secondary)', 
+                  color: showAddMenu ? 'var(--text-primary)' : 'var(--text-secondary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   transition: 'all 0.2s'
                 }}
               >
                 {showAddMenu ? <X size={24} /> : <Plus size={24} style={{ transition: 'transform 0.2s' }} />}
               </button>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '6px 0', marginLeft: '8px' }}>
-              <textarea
-                ref={inputRef}
-                rows={1}
-                placeholder="Ask S anything..."
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${e.target.scrollHeight}px`;
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '6px 0', marginLeft: '8px' }}>
+                {selectedImage && (
+                  <div style={{ position: 'relative', display: 'inline-block', marginBottom: '8px', alignSelf: 'flex-start' }}>
+                    <img src={selectedImage.dataUrl} alt="Preview" style={{ height: '60px', borderRadius: '8px', objectFit: 'cover' }} />
+                    <button onClick={(e) => { e.preventDefault(); setSelectedImage(null); }} style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={12} /></button>
+                  </div>
+                )}
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  placeholder="Ask S anything..."
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
                     e.target.style.height = 'auto';
-                  }
-                }}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className="gemini-textarea"
-                style={{
-                  width: '100%', background: 'transparent', border: 'none',
-                  color: 'var(--text-primary)', outline: 'none', fontSize: '16px',
-                  caretColor: 'var(--text-primary)',
-                  fontFamily: 'inherit', padding: 0, margin: 0,
-                  resize: 'none', overflowY: 'auto', lineHeight: '1.5',
-                  maxHeight: '150px', textAlign: 'center'
-                }}
-              />
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                      e.target.style.height = 'auto';
+                    }
+                  }}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  className="gemini-textarea"
+                  style={{
+                    width: '100%', background: 'transparent', border: 'none',
+                    color: 'var(--text-primary)', outline: 'none', fontSize: '16px',
+                    caretColor: 'var(--text-primary)',
+                    fontFamily: 'inherit', padding: 0, margin: 0,
+                    resize: 'none', overflowY: 'auto', lineHeight: '1.5',
+                    maxHeight: '150px', textAlign: 'center'
+                  }}
+                />
+              </div>
+              {isLoading ? (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={handleStop}
+                  style={{
+                    background: 'transparent', color: 'var(--text-primary)',
+                    border: 'none', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'all 0.3s'
+                  }}
+                  title="Stop generating"
+                >
+                  <Square size={20} fill="currentColor" />
+                </motion.button>
+              ) : (input.trim() && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  onClick={() => handleSend(null)}
+                  style={{
+                    background: 'transparent', color: 'var(--text-primary)',
+                    border: 'none', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', transition: 'all 0.3s'
+                  }}
+                >
+                  <Send size={20} />
+                </motion.button>
+              ))}
             </div>
-            {input.trim() && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={() => handleSend(null)}
-                style={{
-                  background: 'transparent', color: 'var(--text-primary)',
-                  border: 'none', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', transition: 'all 0.3s'
-                }}
-              >
-                <Send size={20} />
-              </motion.button>
-            )}
           </div>
         </div>
-      </div>
       )}
     </div>
   );
@@ -524,9 +675,10 @@ Example:
     );
   }
 
-  if (!user) {
-    return <Login onLogin={() => {}} />;
-  }
+  // Login screen bypassed
+  // if (!user) {
+  //   return <Login onLogin={() => { }} />;
+  // }
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden' }}>
@@ -554,10 +706,6 @@ Example:
           <button onClick={() => setShowSettings(true)} className="icon-btn" style={{ width: '40px', height: '40px' }} title="Settings">
             <Settings size={20} />
           </button>
-          {/* Avatar */}
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 600 }}>
-            S
-          </div>
         </div>
       </nav>
 
@@ -565,7 +713,7 @@ Example:
       <AnimatePresence>
         {isSidebarOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsSidebarOpen(false)}
               style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40 }}
@@ -586,7 +734,7 @@ Example:
               </div>
 
               <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
-                <button 
+                <button
                   onClick={createNewChat}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'var(--accent-color)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 500, marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,113,227,0.3)' }}
                 >
@@ -594,30 +742,30 @@ Example:
                 </button>
 
                 <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px', marginBottom: '12px', marginLeft: '4px' }}>History</h3>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {chatSessions
                     .filter(session => session.messages.length > 0 || session.id === activeSessionId)
-                    .sort((a,b) => b.updatedAt - a.updatedAt)
+                    .sort((a, b) => b.updatedAt - a.updatedAt)
                     .map(session => (
-                    <button
-                      key={session.id}
-                      onClick={() => { setActiveSessionId(session.id); setIsSidebarOpen(false); }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
-                        background: activeSessionId === session.id ? 'rgba(0,0,0,0.05)' : 'transparent',
-                        border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--text-primary)', transition: 'background 0.2s', width: '100%'
-                      }}
-                    >
-                      <MessageSquare size={18} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
-                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>{session.title}</span>
-                    </button>
-                  ))}
+                      <button
+                        key={session.id}
+                        onClick={() => { setActiveSessionId(session.id); setIsSidebarOpen(false); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
+                          background: activeSessionId === session.id ? 'rgba(0,0,0,0.05)' : 'transparent',
+                          border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--text-primary)', transition: 'background 0.2s', width: '100%'
+                        }}
+                      >
+                        <MessageSquare size={18} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>{session.title}</span>
+                      </button>
+                    ))}
                 </div>
               </div>
 
               <div style={{ padding: '20px', borderTop: '1px solid var(--glass-border)' }}>
-                <button 
+                <button
                   onClick={() => { setShowSettings(true); setIsSidebarOpen(false); }}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
                 >
@@ -632,7 +780,7 @@ Example:
 
       {/* Main Content Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-        
+
         <AuraSystem isTyping={isFocused || input.trim() !== ''} isThinking={isThinking || isLoading} hasMessages={messages.length > 0} />
 
         {/* Mobile Header */}
@@ -640,69 +788,101 @@ Example:
           <button className="icon-btn" onClick={() => setIsSidebarOpen(true)} title="Menu">
             <Menu size={24} />
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1rem', fontWeight: 500, color: 'var(--text-secondary)' }}>
-            Gemini Pro <ChevronDown size={16} />
-          </div>
-          <button className="icon-btn" onClick={createNewChat} title="New Chat">
-            <MessageSquare size={24} />
-          </button>
+          <div style={{ flex: 1 }}></div>
         </div>
 
         {messages.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-               <div style={{ marginBottom: '24px' }}>
-                 <Sparkles size={48} color="url(#gemini-grad)" />
-               </div>
-               <h1 className="gemini-greeting-text gemini-gradient-text">
-                 Hello, Sahityaka.
-               </h1>
-               {renderInputArea()}
+            <div style={{ marginBottom: '24px' }}>
+              <Sparkles size={48} color="url(#gemini-grad)" />
+            </div>
+            <h1 className="gemini-greeting-text gemini-gradient-text">
+              Hello, Sahityaka.
+            </h1>
+            {renderInputArea()}
           </div>
         ) : (
           <>
             <div onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', display: 'flex', justifyContent: 'center' }}>
-              <div ref={chatContainerRef} style={{ width: '100%', maxWidth: '800px', padding: '20px 20px 10px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
-              {messages.map((msg, i) => (
-                <div key={i} style={{ display: 'flex', gap: '12px', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
-                  {msg.role === 'model' && (
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Sparkles size={16} color="#ffffff" />
-                    </div>
-                  )}
+              <div ref={chatContainerRef} style={{ width: '100%', maxWidth: '800px', padding: '80px 20px 10px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                {messages.map((msg, i) => (
+                  <div 
+                    key={i} 
+                    onMouseEnter={() => setHoveredMessageIndex(i)}
+                    onMouseLeave={() => setHoveredMessageIndex(null)}
+                    onClick={() => setHoveredMessageIndex(i)}
+                    style={{ display: 'flex', flexDirection: 'column', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}
+                  >
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      {msg.role === 'model' && (
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Sparkles size={16} color="#ffffff" />
+                        </div>
+                      )}
 
-                  <div style={{
-                    background: msg.role === 'user' ? 'var(--user-msg-bg)' : 'transparent',
-                    color: msg.role === 'user' ? 'var(--user-msg-text)' : 'var(--text-primary)',
-                    padding: msg.role === 'user' ? '12px 20px' : '4px 0',
-                    borderRadius: msg.role === 'user' ? '24px' : '0',
-                  }}>
-                    {msg.role === 'user' ? (
-                      <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-                    ) : (
-                      <div className="markdown-body" style={{ position: 'relative' }}>
-                        <ReactMarkdown>{renderMessageContent(msg.content)}</ReactMarkdown>
-                        {isLoading && i === messages.length - 1 && (
-                          <span className="ai-caret"></span>
+                      <div style={{
+                        background: msg.role === 'user' ? 'var(--user-msg-bg)' : 'transparent',
+                        color: msg.role === 'user' ? 'var(--user-msg-text)' : 'var(--text-primary)',
+                        padding: msg.role === 'user' ? '12px 20px' : '4px 0',
+                        borderRadius: msg.role === 'user' ? '24px' : '0',
+                      }}>
+                        {msg.role === 'user' ? (
+                          <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                            {msg.image && <img src={msg.image.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: msg.content ? '8px' : '0' }} />}
+                            {msg.content}
+                          </div>
+                        ) : (
+                          <div className="markdown-body" style={{ position: 'relative' }}>
+                            <ReactMarkdown>{renderMessageContent(msg.content)}</ReactMarkdown>
+                            {isLoading && i === messages.length - 1 && (
+                              <span className="ai-caret"></span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
+                    </div>
+
+                    {/* Action Bar (Hover/Tap to show) */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                      paddingLeft: msg.role === 'model' ? '44px' : '0', // Align with text past the avatar
+                      marginTop: '4px',
+                      opacity: hoveredMessageIndex === i || copiedMessageIndex === i ? 1 : 0,
+                      pointerEvents: hoveredMessageIndex === i || copiedMessageIndex === i ? 'auto' : 'none',
+                      transition: 'opacity 0.2s',
+                      height: '24px' // Pre-allocate space to avoid layout jump
+                    }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleCopy(msg.content, i); }}
+                        style={{
+                          background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.6,
+                          transition: 'opacity 0.2s', color: 'var(--text-secondary)'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                        onMouseOut={(e) => e.currentTarget.style.opacity = 0.6}
+                        title="Copy message"
+                      >
+                        {copiedMessageIndex === i ? <Check size={16} color="#10b981" /> : <Copy size={16} />}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {isThinking && (
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Sparkles size={16} color="#ffffff" />
+                ))}
+                {isThinking && (
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Sparkles size={16} color="#ffffff" />
+                    </div>
+                    <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', boxShadow: '0 0 10px rgba(155, 114, 203, 0.8)' }} />
+                      </motion.div>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }} className="gemini-gradient-text">Processing...</span>
+                    </div>
                   </div>
-                  <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} style={{ display: 'flex', alignItems: 'center' }}>
-                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', boxShadow: '0 0 10px rgba(155, 114, 203, 0.8)' }} />
-                    </motion.div>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }} className="gemini-gradient-text">Processing...</span>
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} style={{ height: '1px', flexShrink: 0 }} />
+                )}
+                <div ref={chatEndRef} style={{ height: '1px', flexShrink: 0 }} />
               </div>
             </div>
 
@@ -721,7 +901,7 @@ Example:
 
             {/* Input Area (Bottom) */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 24px', zIndex: 20 }}>
-               {renderInputArea()}
+              {renderInputArea()}
             </div>
           </>
         )}
@@ -770,12 +950,12 @@ Example:
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', marginTop: '16px' }}>
                     {['Appearance', 'Theme', 'My Data', 'My Health Data'].map(opt => (
-                      <button 
-                        key={opt} 
+                      <button
+                        key={opt}
                         onClick={() => setActiveSettingView(opt.toLowerCase().replace(/ /g, ''))}
-                        style={{ 
-                          padding: '16px', borderRadius: '14px', border: 'none', 
-                          background: 'var(--btn-bg)', color: 'var(--text-primary)', 
+                        style={{
+                          padding: '16px', borderRadius: '14px', border: 'none',
+                          background: 'var(--btn-bg)', color: 'var(--text-primary)',
                           textAlign: 'left', cursor: 'pointer', fontSize: '1rem',
                           fontWeight: 500, transition: 'background 0.2s'
                         }}
@@ -810,7 +990,7 @@ Example:
               {activeSettingView !== 'menu' && (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                    <button 
+                    <button
                       onClick={() => setActiveSettingView('menu')}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
                     >
@@ -873,7 +1053,7 @@ Example:
                       <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
                         Attached Documents
                       </p>
-                      <div 
+                      <div
                         onClick={() => setShowFullScreenRecovery(true)}
                         style={{
                           display: 'flex', alignItems: 'center', gap: '16px', padding: '16px',
@@ -915,17 +1095,17 @@ Example:
               display: 'flex', flexDirection: 'column'
             }}
           >
-            <div style={{ 
-              display: 'flex', alignItems: 'center', padding: '16px 20px', 
+            <div style={{
+              display: 'flex', alignItems: 'center', padding: '16px 20px',
               borderBottom: '1px solid rgba(0,0,0,0.05)',
               background: 'var(--bg-color)'
             }}>
-              <button 
+              <button
                 onClick={() => setShowFullScreenRecovery(false)}
-                style={{ 
-                  background: 'transparent', border: 'none', cursor: 'pointer', 
-                  display: 'flex', alignItems: 'center', gap: '8px', 
-                  color: 'var(--accent-color)', fontSize: '1rem', fontWeight: 500 
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '8px',
+                  color: 'var(--accent-color)', fontSize: '1rem', fontWeight: 500
                 }}
               >
                 <ChevronLeft size={24} /> Back
@@ -934,15 +1114,43 @@ Example:
                 Recovery Plan
               </h3>
             </div>
-            
+
             {/* Content */}
             <div style={{ flex: 1, overflow: 'hidden' }}>
-              <iframe 
-                src="/recovery_plan.html" 
-                style={{ width: '100%', height: '100%', border: 'none', background: 'var(--bg-color)' }} 
-                title="Health Recovery Plan" 
+              <iframe
+                src="/recovery_plan.html"
+                style={{ width: '100%', height: '100%', border: 'none', background: 'var(--bg-color)' }}
+                title="Health Recovery Plan"
               />
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    {/* Beta Disclaimer Popup */}
+      <AnimatePresence>
+        {showDisclaimer && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'var(--bg-color)', padding: '32px', borderRadius: '24px', maxWidth: '400px', textAlign: 'center', border: '1px solid var(--glass-border)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}
+            >
+              <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.4rem' }}>Beta Version</h2>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '24px', fontSize: '0.95rem' }}>
+                This site has been launched quickly but it currently has some bugs and issues. We are actively working on fixing them, and a new stable version is coming soon. This is just a beta version.
+              </p>
+              <button
+                onClick={() => setShowDisclaimer(false)}
+                style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background 0.2s' }}
+                onMouseOver={(e) => e.target.style.background = '#0062c3'}
+                onMouseOut={(e) => e.target.style.background = 'var(--accent-color)'}
+              >
+                Okay
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
