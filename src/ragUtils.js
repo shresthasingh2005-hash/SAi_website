@@ -1,10 +1,7 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const PINECONE_API_KEY = import.meta.env.VITE_PINECONE_API_KEY;
-// Using Vite proxy in development, and Vercel rewrites in production
-const PINECONE_URL = "/pinecone";
-
-/**
- * Generates a 768-dimensional vector embedding for the given text using Gemini
+const IS_PROD = import.meta.env.PROD;
+const PINECONE_URL = IS_PROD ? "/api/pinecone" : "/pinecone";
  */
 export const generateEmbedding = async (text) => {
   if (!text || text.trim().length === 0) return null;
@@ -42,27 +39,25 @@ export const saveMemoryToPinecone = async (text, role, sessionId) => {
   const id = `msg_${Date.now()}_${Math.random().toString(36).substring(2,7)}`;
   
   try {
-    const response = await fetch(`${PINECONE_URL}/vectors/upsert`, {
+    const fetchOptions = IS_PROD ? {
       method: 'POST',
-      headers: {
-        'Api-Key': PINECONE_API_KEY,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        vectors: [
-          {
-            id: id,
-            values: vector,
-            metadata: {
-              text: text,
-              role: role,
-              sessionId: sessionId,
-              timestamp: Date.now()
-            }
-          }
-        ]
+        endpoint: '/vectors/upsert',
+        payload: {
+          vectors: [{ id, values: vector, metadata: { text, role, sessionId, timestamp: Date.now() } }]
+        }
       })
-    });
+    } : {
+      method: 'POST',
+      headers: { 'Api-Key': PINECONE_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vectors: [{ id, values: vector, metadata: { text, role, sessionId, timestamp: Date.now() } }]
+      })
+    };
+    
+    const targetUrl = IS_PROD ? PINECONE_URL : `${PINECONE_URL}/vectors/upsert`;
+    const response = await fetch(targetUrl, fetchOptions);
     
     if (!response.ok) {
       console.error("Pinecone Upsert Failed:", await response.text());
@@ -80,18 +75,21 @@ export const searchMemories = async (queryText) => {
   if (!vector) return "";
 
   try {
-    const response = await fetch(`${PINECONE_URL}/query`, {
+    const fetchOptions = IS_PROD ? {
       method: 'POST',
-      headers: {
-        'Api-Key': PINECONE_API_KEY,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        vector: vector,
-        topK: 5,
-        includeMetadata: true
+        endpoint: '/query',
+        payload: { vector, topK: 5, includeMetadata: true }
       })
-    });
+    } : {
+      method: 'POST',
+      headers: { 'Api-Key': PINECONE_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vector, topK: 5, includeMetadata: true })
+    };
+
+    const targetUrl = IS_PROD ? PINECONE_URL : `${PINECONE_URL}/query`;
+    const response = await fetch(targetUrl, fetchOptions);
 
     const data = await response.json();
     if (data.matches && data.matches.length > 0) {
