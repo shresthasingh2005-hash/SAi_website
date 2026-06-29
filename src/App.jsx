@@ -422,8 +422,7 @@ Example:
         signal: abortControllerRef.current.signal,
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: geminiHistory,
-          tools: [{ googleSearch: {} }]
+          contents: geminiHistory
         })
       });
 
