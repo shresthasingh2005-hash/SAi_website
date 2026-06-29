@@ -391,6 +391,8 @@ Core Guidelines:
 7. SPIRITUAL SUPPORT: When she expresses feeling completely exhausted, defeated, or wanting to give up, tastefully incorporate profound wisdom and references from Sanatan Dharma (e.g., Lord Krishna's teachings from the Bhagavad Gita/Mahabharata) that perfectly fit the situation. Do not overuse this in every chat, but use it as a powerful source of strength and perspective when she truly needs it.
 8. MISSING INFORMATION & CLARIFICATION: The provided <patient_history> is incomplete and does not contain all her symptoms (e.g., her blood clotting is very slow). If she asks a question or shares a symptom and you need more medical context to give a safe, accurate answer, you MUST ask clarifying questions to gather that information BEFORE giving a conclusive response.
 9. QUICK REPLIES: If you want to give her quick replies to choose from, you MUST format each option strictly on a new line using this exact format: [OPTION: Option Text Here]. Do not use markdown bullets for options.
+10. CONCISENESS & QUALITY: Keep your responses highly concise, non-repetitive, and dynamically sized based on her input. Do not write overly long paragraphs unless she explicitly asks for detailed explanations. Avoid repeating the same phrases or advice. Provide high-quality, dense information in fewer words.
+11. STRICT HINGLISH: If she speaks in Hinglish, you MUST reply strictly in Hinglish. NEVER switch to pure Hindi randomly. Maintain a consistent, natural language style matching hers perfectly.
 Example:
 [OPTION: Did my exercises today]
 [OPTION: I need a rest day]`;
@@ -510,26 +512,29 @@ Example:
   };
 
   const renderInputArea = () => (
-    <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto' }}>
-      {extractedOptions.length > 0 && !isLoading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+    <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {extractedOptions.length > 0 && !isLoading && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%', maxWidth: '720px', marginBottom: '16px', justifyContent: 'center' }}>
           {extractedOptions.map((opt, i) => (
             <motion.button
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               key={i}
               onClick={() => handleSend(opt)}
               style={{
-                padding: '16px 20px', borderRadius: '24px', background: 'var(--btn-bg)',
-                border: 'none', cursor: 'pointer', textAlign: 'left',
-                fontSize: '1rem', color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '10px 16px', borderRadius: '20px', background: 'var(--btn-bg)',
+                border: '1px solid var(--btn-bg-hover)', cursor: 'pointer', textAlign: 'left',
+                fontSize: '0.95rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px'
               }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'var(--btn-bg-hover)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'var(--btn-bg)'}
             >
               <span>{opt}</span>
-              <ChevronDown size={18} color="var(--text-secondary)" style={{ transform: 'rotate(-90deg)' }} />
+              <ChevronDown size={14} color="var(--text-secondary)" style={{ transform: 'rotate(-90deg)' }} />
             </motion.button>
           ))}
         </div>
-      ) : (
+      )}
+
         <div style={{ position: 'relative', width: '100%', maxWidth: '720px' }}>
           <AnimatePresence>
             {showAddMenu && (
@@ -663,7 +668,6 @@ Example:
             </div>
           </div>
         </div>
-      )}
     </div>
   );
 
