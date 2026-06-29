@@ -1,4 +1,4 @@
-import { doc, setDoc, getDocs, collection } from 'firebase/firestore';
+import { doc, setDoc, getDocs, collection, deleteDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
 export const loadSessionsFromFirestore = async (uid) => {
@@ -23,5 +23,20 @@ export const saveSessionToFirestore = async (uid, session) => {
     await setDoc(sessionRef, session, { merge: true });
   } catch (error) {
     console.error("Error saving session to Firestore", error);
+  }
+};
+
+export const deleteAllSessions = async (uid) => {
+  try {
+    const sessionsRef = collection(db, 'users', uid, 'sessions');
+    const snapshot = await getDocs(sessionsRef);
+    const deletePromises = [];
+    snapshot.forEach(docSnap => {
+      deletePromises.push(deleteDoc(doc(db, 'users', uid, 'sessions', docSnap.id)));
+    });
+    await Promise.all(deletePromises);
+    console.log(`Deleted all sessions for ${uid}`);
+  } catch (error) {
+    console.error("Error deleting sessions", error);
   }
 };
