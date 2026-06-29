@@ -426,8 +426,7 @@ Example:
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || "Network error");
+        throw new Error("System is resting for a moment");
       }
 
       const data = await response.json();
@@ -487,7 +486,7 @@ Example:
       setIsThinking(false);
       setChatSessions(prev => prev.map(s =>
         s.id === activeSessionId
-          ? { ...s, messages: [...s.messages, { role: 'model', content: `Oops! Network issue: ${error.message}` }], updatedAt: Date.now() }
+          ? { ...s, messages: [...s.messages, { role: 'model', content: `Oh, mera system thoda lag ho raha hai lagta hai. Ek second mujhe saans lene do... wapas bologe please?` }], updatedAt: Date.now() }
           : s
       ));
     } finally {
