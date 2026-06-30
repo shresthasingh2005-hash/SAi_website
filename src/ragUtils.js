@@ -10,7 +10,8 @@ export const generateEmbedding = async (text) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: "models/gemini-embedding-2",
-        content: { parts: [{ text: text }] }
+        content: { parts: [{ text: text }] },
+        outputDimensionality: 768
       })
     });
     const data = await response.json();
