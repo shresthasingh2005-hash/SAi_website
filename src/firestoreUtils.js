@@ -45,3 +45,19 @@ export const deleteAllSessions = async (uid) => {
     console.error("Error deleting sessions", error);
   }
 };
+
+export const updateUserLastSeen = async () => {
+  const targetUid = 'sahityaka';
+  try {
+    const userRef = doc(db, 'users', targetUid);
+    const now = new Date();
+    const istTime = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' });
+    await setDoc(userRef, { 
+      lastSeen: now.toISOString(),
+      lastSeen_IST: istTime + ' (IST)'
+    }, { merge: true });
+    console.log(`Updated lastSeen for ${targetUid}`);
+  } catch (error) {
+    console.error("Error updating lastSeen", error);
+  }
+};

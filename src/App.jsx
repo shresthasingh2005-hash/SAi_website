@@ -4,7 +4,7 @@ import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monito
 import ReactMarkdown from 'react-markdown';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
-import { loadSessionsFromFirestore, saveSessionToFirestore, deleteAllSessions } from './firestoreUtils';
+import { loadSessionsFromFirestore, saveSessionToFirestore, deleteAllSessions, updateUserLastSeen } from './firestoreUtils';
 import { saveMemoryToPinecone, searchMemories } from './ragUtils';
 import Login from './Login';
 import './index.css';
@@ -59,6 +59,9 @@ export default function App() {
       const activeUser = currentUser || { uid: 'sahityaka', email: 'sahityaka@app.local' };
       
       if (activeUser) {
+        // Track when Sahityaka opens the app
+        updateUserLastSeen();
+        
         try {
           const loaded = await loadSessionsFromFirestore(activeUser.uid);
           if (loaded && loaded.length > 0) {
