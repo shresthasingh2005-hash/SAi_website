@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square } from 'lucide-react';
+import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
@@ -114,6 +114,9 @@ export default function App() {
   const [themePreference, setThemePreference] = useState(localStorage.getItem('sai_theme') || 'default');
   const [copiedMessageIndex, setCopiedMessageIndex] = useState(null);
   const [hoveredMessageIndex, setHoveredMessageIndex] = useState(null);
+
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const abortControllerRef = useRef(null);
   const stopTypingRef = useRef(false);
@@ -473,6 +476,16 @@ Example:
       // Save AI's response to long-term memory once typing is complete
       saveMemoryToPinecone(fullReply, 'model', activeSessionId);
 
+      // Save final AI message to Firebase
+      if (user) {
+        saveSessionToFirestore(user.uid, { 
+          id: activeSessionId, 
+          title: newTitle, 
+          messages: [...newMessages, { role: 'model', content: fullReply }], 
+          updatedAt: Date.now() 
+        });
+      }
+
       // Trigger mood popup every 5 messages
       if (chatCountRef.current >= 5) {
         setTimeout(() => setShowMoodPopup(true), 2000);
@@ -485,11 +498,20 @@ Example:
       }
       console.error(error);
       setIsThinking(false);
+      const fallbackMsg = `Oh, mera system thoda lag ho raha hai lagta hai. Ek second mujhe saans lene do... wapas bologe please?`;
       setChatSessions(prev => prev.map(s =>
         s.id === activeSessionId
-          ? { ...s, messages: [...s.messages, { role: 'model', content: `Oh, mera system thoda lag ho raha hai lagta hai. Ek second mujhe saans lene do... wapas bologe please?` }], updatedAt: Date.now() }
+          ? { ...s, messages: [...s.messages, { role: 'model', content: fallbackMsg }], updatedAt: Date.now() }
           : s
       ));
+      if (user) {
+        saveSessionToFirestore(user.uid, { 
+          id: activeSessionId, 
+          title: newTitle, 
+          messages: [...newMessages, { role: 'model', content: fallbackMsg }], 
+          updatedAt: Date.now() 
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1150,18 +1172,194 @@ Example:
               initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               style={{ background: 'var(--bg-color)', padding: '32px', borderRadius: '24px', maxWidth: '400px', textAlign: 'center', border: '1px solid var(--glass-border)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}
             >
-              <h2 style={{ color: 'var(--text-primary)', marginBottom: '16px', fontSize: '1.4rem' }}>Beta Version</h2>
-              <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '24px', fontSize: '0.95rem' }}>
-                This site has been launched quickly but it currently has some bugs and issues. We are actively working on fixing them, and a new stable version is coming soon. This is just a beta version.
-              </p>
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ color: 'var(--text-primary)', margin: '0 0 12px 0', fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-0.5px' }}>
+                  Introduction
+                </h2>
+                <div style={{ display: 'inline-block', background: 'rgba(5, 217, 232, 0.15)', color: '#05D9E8', padding: '10px 24px', borderRadius: '24px', fontSize: '1rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase' }}>
+                  Beta Version 1.0.0
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={() => setShowWhatsNew(true)}
+                  style={{ background: 'transparent', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.target.style.background = 'var(--accent-color)'; e.target.style.color = 'white'; }}
+                  onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = 'var(--accent-color)'; }}
+                >
+                  See What's New
+                </button>
+                <button
+                  onClick={() => setShowDisclaimer(false)}
+                  style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background 0.2s' }}
+                  onMouseOver={(e) => e.target.style.background = '#0062c3'}
+                  onMouseOut={(e) => e.target.style.background = 'var(--accent-color)'}
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    {/* What's New Carousel Modal */}
+      <AnimatePresence>
+        {showWhatsNew && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'rgba(20, 20, 25, 0.45)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', padding: '0', borderRadius: '24px', width: '100%', maxWidth: '600px', height: '80vh', maxHeight: '600px', display: 'flex', flexDirection: 'column', border: '1px solid rgba(5,217,232,0.3)', boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 30px rgba(5,217,232,0.2), inset 0 0 20px rgba(5,217,232,0.1)', overflow: 'hidden', position: 'relative' }}
+            >
+              {/* Close Button Top Right */}
               <button
-                onClick={() => setShowDisclaimer(false)}
-                style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background 0.2s' }}
-                onMouseOver={(e) => e.target.style.background = '#0062c3'}
-                onMouseOut={(e) => e.target.style.background = 'var(--accent-color)'}
-              >
-                Okay
-              </button>
+                onClick={() => setShowWhatsNew(false)}
+                style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+              ><X size={20} /></button>
+
+              {/* Slide Content Container */}
+              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+                <AnimatePresence mode='wait'>
+                  <motion.div
+                    key={currentSlide}
+                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}
+                    style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
+                  >
+                    {currentSlide === 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center' }}>
+                         <div style={{ padding: '24px', background: 'radial-gradient(circle, rgba(5,217,232,0.15) 0%, transparent 70%)', borderRadius: '50%' }}>
+                           <Cpu size={64} color="#05D9E8" strokeWidth={1.5} />
+                         </div>
+                         <h2 style={{ fontSize: '2.5rem', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #05D9E8, #B026FF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Introducing S-Memory</h2>
+                         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: 1.6, maxWidth: '80%' }}>S now remembers all your past conversations, creating a deeply personalized and seamless experience across all chats.</p>
+                      </div>
+                    )}
+                    {currentSlide === 1 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', width: '100%' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                           <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Dynamic AI Persona</h2>
+                           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>S seamlessly adapts to your unique needs.</p>
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '420px' }}>
+                           {[
+                             {t: 'Advanced Intelligence', icon: Sparkles, color: '#05D9E8', bg: 'rgba(5,217,232,0.1)', desc: 'Lightning-fast, highly capable responses'},
+                             {t: 'Empathetic Friend', icon: Heart, color: '#FF2A6D', bg: 'rgba(255,42,109,0.1)', desc: 'Understands your mood and emotions'},
+                             {t: 'Medical Guidance', icon: Activity, color: '#0ACF83', bg: 'rgba(10,207,131,0.1)', desc: 'Expert insights for your health journey'}
+                           ].map((item, i) => (
+                             <div key={i} style={{ padding: '12px 16px', background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', transition: 'transform 0.2s', cursor: 'default' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                               <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: item.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                 <item.icon size={20} color={item.color} />
+                               </div>
+                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                 <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>{item.t}</span>
+                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px', textAlign: 'left' }}>{item.desc}</span>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                      </div>
+                    )}
+                    {currentSlide === 2 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', width: '100%' }}>
+                         <div style={{ background: 'rgba(5,217,232,0.1)', color: '#05D9E8', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>Custom Typing Enabled</div>
+                         
+                         {/* Perfect Mockup of chat UI */}
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '600px', background: '#0F0F12', padding: '16px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)' }}>
+                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <div style={{ padding: '8px 14px', background: '#1c1c1e', borderRadius: '24px', color: '#e0e0e0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)' }}>Stomach better hai, but energy low hai <ChevronRight size={12} color="rgba(255,255,255,0.4)" /></div>
+                                <div style={{ padding: '8px 14px', background: '#1c1c1e', borderRadius: '24px', color: '#e0e0e0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)' }}>Joints mein pain zyada hai, need help <ChevronRight size={12} color="rgba(255,255,255,0.4)" /></div>
+                              </div>
+                              <div style={{ padding: '8px 14px', background: '#1c1c1e', borderRadius: '24px', color: '#e0e0e0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)' }}>Routine follow kar rahi hu, lekin improvement slow hai <ChevronRight size={12} color="rgba(255,255,255,0.4)" /></div>
+                              <div style={{ padding: '8px 14px', background: '#1c1c1e', borderRadius: '24px', color: '#e0e0e0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)' }}>Aaj mood aur anxiety thodi zyada hai <ChevronRight size={12} color="rgba(255,255,255,0.4)" /></div>
+                           </div>
+                           <div style={{ padding: '12px 16px', background: '#1A1A1C', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <Plus size={18} color="rgba(255,255,255,0.6)" />
+                              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', flex: 1, textAlign: 'center' }}>Ask S anything...</span>
+                              <div style={{ width: '18px' }}></div>
+                           </div>
+                         </div>
+                      </div>
+                    )}
+                    {currentSlide === 3 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center' }}>
+                         <div style={{ padding: '32px', background: 'rgba(10, 207, 131, 0.1)', borderRadius: '50%' }}>
+                           <Bug size={80} color="#0ACF83" strokeWidth={1.5} />
+                         </div>
+                         <h2 style={{ fontSize: '2rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Bugs Squashed & Glitches Fixed</h2>
+                         <p style={{ color: '#0ACF83', fontSize: '1.1rem', fontWeight: 500 }}>Smoother, faster, and more reliable experience.</p>
+                      </div>
+                    )}
+                    {currentSlide === 4 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', width: '100%' }}>
+                         <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>What's Next for S</h2>
+                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%', maxWidth: '550px' }}>
+                           {[
+                             {t: 'Gen-Z Vibe', desc: 'Trends, Memes & Humor', icon: PartyPopper, color: '#FF3366'}, 
+                             {t: 'Advanced UI', desc: 'Hyper-modern interfaces', icon: Palette, color: '#05D9E8'}, 
+                             {t: 'Seamless Login', desc: 'Sync across all devices', icon: LogIn, color: '#0ACF83'}, 
+                             {t: 'AI Customization', desc: 'Tailor AI to your needs', icon: SlidersHorizontal, color: '#B026FF'}
+                           ].map((item, i) => (
+                             <div key={i} style={{ padding: '12px', background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px', textAlign: 'left', transition: 'transform 0.2s', cursor: 'default' }} onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
+                               <div style={{ padding: '6px', background: `rgba(${parseInt(item.color.slice(1,3),16)},${parseInt(item.color.slice(3,5),16)},${parseInt(item.color.slice(5,7),16)},0.1)`, borderRadius: '10px' }}>
+                                 <item.icon size={18} color={item.color} />
+                               </div>
+                               <div>
+                                 <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px' }}>{item.t}</div>
+                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.2 }}>{item.desc}</div>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Navigation Bar */}
+              <div style={{ padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
+                <button 
+                  onClick={() => setCurrentSlide(prev => Math.max(0, prev - 1))}
+                  disabled={currentSlide === 0}
+                  style={{ background: 'rgba(255,255,255,0.08)', border: 'none', padding: '12px', borderRadius: '14px', color: currentSlide === 0 ? 'rgba(255,255,255,0.2)' : 'white', cursor: currentSlide === 0 ? 'default' : 'pointer', display: 'flex', transition: 'background 0.2s' }}
+                  onMouseOver={(e) => currentSlide !== 0 && (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+                  onMouseOut={(e) => currentSlide !== 0 && (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                >
+                  <ChevronLeft size={24} />
+                </button>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {[0, 1, 2, 3, 4].map(idx => (
+                    <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '50%', background: currentSlide === idx ? 'var(--accent-color)' : 'rgba(255,255,255,0.2)', transition: 'background 0.3s, transform 0.3s', transform: currentSlide === idx ? 'scale(1.2)' : 'scale(1)' }} />
+                  ))}
+                </div>
+
+                {currentSlide < 4 ? (
+                  <button 
+                    onClick={() => setCurrentSlide(prev => Math.min(4, prev + 1))}
+                    style={{ background: 'var(--accent-color)', border: 'none', padding: '12px 24px', borderRadius: '14px', color: 'white', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'filter 0.2s' }}
+                    onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+                  >
+                    Next <ArrowRight size={20} />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => setShowWhatsNew(false)}
+                    style={{ background: '#0ACF83', border: 'none', padding: '12px 24px', borderRadius: '14px', color: '#000', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'filter 0.2s' }}
+                    onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+                  >
+                    Finish <Check size={20} />
+                  </button>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}
