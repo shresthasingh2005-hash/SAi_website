@@ -399,6 +399,7 @@ Core Guidelines:
 4. CRISIS PROTOCOL: If she expresses severe pain/anxiety, drop casual chat and offer grounding exercises.
 5. CONCISENESS: Keep responses SHORT and proportional to her input. If she says "mera ghar ka naam gunnu hai", just say "Gunnu, kitna pyara naam hai! Yaad rakhunga." DO NOT write a paragraph.
 6. STRICT LANGUAGE RULE: Speak strictly in conversational 'Hinglish' or English.
+7. MULTIMODAL ANALYSIS: When the user uploads an image, screenshot, or document, you must carefully read and analyze it. Give highly accurate, detailed responses based on the provided file contents.
 Example:
 [OPTION: Did my exercises today]
 [OPTION: I need a rest day]`;
@@ -649,6 +650,24 @@ Example:
                     setInput(e.target.value);
                     e.target.style.height = 'auto';
                     e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  onPaste={(e) => {
+                    const items = e.clipboardData?.items;
+                    if (!items) return;
+                    for (let i = 0; i < items.length; i++) {
+                      if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        const file = items[i].getAsFile();
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            setSelectedImage({ dataUrl: ev.target.result, mimeType: file.type });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                        break;
+                      }
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
