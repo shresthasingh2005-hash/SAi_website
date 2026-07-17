@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight } from 'lucide-react';
+import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
@@ -120,6 +120,23 @@ export default function App() {
 
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const [showDownPopup, setShowDownPopup] = useState(false);
+  const [callbackStatus, setCallbackStatus] = useState('idle');
+
+  const handleRaiseCallback = async () => {
+    setCallbackStatus('sending');
+    try {
+      const BOT_TOKEN = "8161410062:AAFVsVUwgwkkYgl34ANWueyxA0X-kPFC_1Y";
+      const CHAT_ID = "1399249612";
+      const message = encodeURIComponent("🚨 Callback Request: Sahityaka has requested a callback from the SAi_Website due to the temporary downtime popup.");
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${message}`);
+      setCallbackStatus('sent');
+    } catch (e) {
+      console.error(e);
+      setCallbackStatus('error');
+    }
+  };
 
   const abortControllerRef = useRef(null);
   const stopTypingRef = useRef(false);
@@ -1212,12 +1229,51 @@ Example:
                   See What's New
                 </button>
                 <button
-                  onClick={() => setShowDisclaimer(false)}
+                  onClick={() => { setShowDisclaimer(false); setShowDownPopup(true); }}
                   style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background 0.2s' }}
                   onMouseOver={(e) => e.target.style.background = '#0062c3'}
                   onMouseOut={(e) => e.target.style.background = 'var(--accent-color)'}
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    {/* Temporarily Down Popup Modal */}
+      <AnimatePresence>
+        {showDownPopup && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'var(--bg-color)', padding: '32px', borderRadius: '24px', maxWidth: '400px', textAlign: 'center', border: '1px solid rgba(255, 75, 75, 0.3)', boxShadow: '0 10px 40px rgba(255, 75, 75, 0.1)' }}
+            >
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 75, 75, 0.1)', color: '#ff4b4b', marginBottom: '16px' }}>
+                  <AlertTriangle size={32} />
+                </div>
+                <h2 style={{ color: 'var(--text-primary)', margin: '0 0 12px 0', fontSize: '1.5rem', fontWeight: '800' }}>
+                  Service Unavailable
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.5, margin: 0 }}>
+                  We apologize, but this site has been temporarily suspended due to prolonged inactivity and lack of response.
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={handleRaiseCallback}
+                  disabled={callbackStatus === 'sending' || callbackStatus === 'sent'}
+                  style={{ background: callbackStatus === 'sent' ? '#0ACF83' : '#ff4b4b', color: callbackStatus === 'sent' ? '#000' : 'white', border: 'none', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: callbackStatus === 'sent' ? 'default' : 'pointer', width: '100%', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {callbackStatus === 'idle' && 'Raise a Callback'}
+                  {callbackStatus === 'sending' && 'Sending...'}
+                  {callbackStatus === 'sent' && <><Check size={20} /> Request Sent</>}
+                  {callbackStatus === 'error' && 'Retry Callback'}
                 </button>
               </div>
             </motion.div>
