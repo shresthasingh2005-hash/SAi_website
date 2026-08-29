@@ -1022,22 +1022,27 @@ Example:
                     <Settings size={20} /> Settings
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', marginTop: '16px' }}>
-                    {['Appearance', 'Theme', 'My Data', 'My Health Data'].map(opt => (
-                      <button
-                        key={opt}
-                        onClick={() => setActiveSettingView(opt.toLowerCase().replace(/ /g, ''))}
-                        style={{
-                          padding: '16px', borderRadius: '14px', border: 'none',
-                          background: 'var(--btn-bg)', color: 'var(--text-primary)',
-                          textAlign: 'left', cursor: 'pointer', fontSize: '1rem',
-                          fontWeight: 500, transition: 'background 0.2s'
-                        }}
-                        onMouseOver={(e) => e.target.style.background = 'var(--btn-bg-hover)'}
-                        onMouseOut={(e) => e.target.style.background = 'var(--btn-bg)'}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {['Appearance', 'Theme', 'My Data', 'My Health Data'].map(opt => {
+                      const isDisabled = opt === 'My Data' || opt === 'My Health Data';
+                      return (
+                        <button
+                          key={opt}
+                          onClick={() => !isDisabled && setActiveSettingView(opt.toLowerCase().replace(/ /g, ''))}
+                          disabled={isDisabled}
+                          style={{
+                            padding: '16px', borderRadius: '14px', border: 'none',
+                            background: 'var(--btn-bg)', color: 'var(--text-primary)',
+                            textAlign: 'left', cursor: isDisabled ? 'not-allowed' : 'pointer', fontSize: '1rem',
+                            fontWeight: 500, transition: 'background 0.2s',
+                            opacity: isDisabled ? 0.4 : 1
+                          }}
+                          onMouseOver={(e) => { if (!isDisabled) e.target.style.background = 'var(--btn-bg-hover)' }}
+                          onMouseOut={(e) => { if (!isDisabled) e.target.style.background = 'var(--btn-bg)' }}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '20px' }}>
