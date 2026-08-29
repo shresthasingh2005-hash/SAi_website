@@ -2,7 +2,7 @@ import { doc, setDoc, getDocs, collection, deleteDoc } from 'firebase/firestore'
 import { db } from './firebaseConfig';
 
 export const loadSessionsFromFirestore = async (uid) => {
-  const targetUid = 'sahityaka';
+  const targetUid = uid;
   try {
     const sessionsRef = collection(db, 'users', targetUid, 'sessions');
     const snapshot = await getDocs(sessionsRef);
@@ -19,7 +19,7 @@ export const loadSessionsFromFirestore = async (uid) => {
 };
 
 export const saveSessionToFirestore = async (uid, session) => {
-  const targetUid = 'sahityaka';
+  const targetUid = uid;
   try {
     const sessionRef = doc(db, 'users', targetUid, 'sessions', session.id);
     await setDoc(sessionRef, session, { merge: true });
@@ -31,7 +31,7 @@ export const saveSessionToFirestore = async (uid, session) => {
 };
 
 export const deleteAllSessions = async (uid) => {
-  const targetUid = 'sahityaka';
+  const targetUid = uid;
   try {
     const sessionsRef = collection(db, 'users', targetUid, 'sessions');
     const snapshot = await getDocs(sessionsRef);
@@ -46,8 +46,8 @@ export const deleteAllSessions = async (uid) => {
   }
 };
 
-export const updateUserLastSeen = async () => {
-  const targetUid = 'sahityaka';
+export const updateUserLastSeen = async (uid) => {
+  const targetUid = uid || 'general_user_general';
   try {
     const userRef = doc(db, 'users', targetUid);
     const now = new Date();

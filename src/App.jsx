@@ -56,11 +56,13 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // HACK: Force default user if not logged in to bypass login screen
-      const activeUser = currentUser || { uid: 'sahityaka', email: 'sahityaka@app.local' };
+      let activeUser = currentUser ? { ...currentUser } : { uid: 'general_user', email: 'general_user@app.local' };
+      // Override uid to create a fresh history category without deleting the old one
+      activeUser.uid = activeUser.uid + '_general';
       
       if (activeUser) {
         // Track when Sahityaka opens the app
-        updateUserLastSeen();
+        updateUserLastSeen(activeUser.uid);
         
         try {
           const loaded = await loadSessionsFromFirestore(activeUser.uid);
@@ -799,7 +801,7 @@ Example:
               <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Sparkles size={20} color="var(--accent-purple)" />
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>S</h2>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>S.ai</h2>
                 </div>
                 <button onClick={() => setIsSidebarOpen(false)} className="icon-btn" style={{ width: '32px', height: '32px' }}>
                   <X size={20} />
