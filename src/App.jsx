@@ -1229,7 +1229,7 @@ Example:
                   See What's New
                 </button>
                 <button
-                  onClick={() => { setShowDisclaimer(false); setShowDownPopup(true); }}
+                  onClick={() => { setShowDisclaimer(false); }}
                   style={{ background: 'var(--accent-color)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'background 0.2s' }}
                   onMouseOver={(e) => e.target.style.background = '#0062c3'}
                   onMouseOut={(e) => e.target.style.background = 'var(--accent-color)'}
