@@ -443,7 +443,7 @@ Example:
       abortControllerRef.current = new AbortController();
       stopTypingRef.current = false;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
+      let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: abortControllerRef.current.signal,
@@ -452,6 +452,20 @@ Example:
           contents: geminiHistory
         })
       });
+
+      // Automatic fallback if the primary model hits a rate limit
+      if (response.status === 429 || response.status === 503) {
+        console.warn("Primary model rate limit hit. Switching to fallback model (gemini-1.5-flash)...");
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: abortControllerRef.current.signal,
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: geminiHistory
+          })
+        });
+      }
 
       if (!response.ok) {
         throw new Error("System is resting for a moment");
