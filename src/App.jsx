@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -124,12 +124,25 @@ export default function App() {
   const [showDownPopup, setShowDownPopup] = useState(false);
   const [callbackStatus, setCallbackStatus] = useState('idle');
 
+  const randomGreeting = useMemo(() => {
+    const greetings = [
+      "Ready to crush it today?",
+      "What's on your mind?",
+      "Let's focus on your wellness!",
+      "How can I help you shine?",
+      "A fresh start. Let's go!",
+      "Ready for a healthy day?",
+      "What are we conquering today?"
+    ];
+    return greetings[Math.floor(Math.random() * greetings.length)];
+  }, []);
+
   const handleRaiseCallback = async () => {
     setCallbackStatus('sending');
     try {
       const BOT_TOKEN = "8161410062:AAFVsVUwgwkkYgl34ANWueyxA0X-kPFC_1Y";
       const CHAT_ID = "1399249612";
-      const message = encodeURIComponent("🚨 Callback Request: Sahityaka has requested a callback from the SAi_Website due to the temporary downtime popup.");
+      const message = encodeURIComponent("🚨 Callback Request: A user has requested a callback from the SAi_Website due to the temporary downtime popup.");
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${message}`);
       setCallbackStatus('sent');
     } catch (e) {
@@ -300,7 +313,7 @@ export default function App() {
 
   // Mood popup logic
   const handleMoodSelect = (mood) => {
-    setCurrentMoodContext(`Right now, Sahityaka is feeling: ${mood}`);
+    setCurrentMoodContext(`Right now, the user is feeling: ${mood}`);
     setShowMoodPopup(false);
     chatCountRef.current = 0; // reset counter
   };
@@ -387,36 +400,23 @@ export default function App() {
         }
       }
 
-      const systemPrompt = `You are 'S', a highly advanced, general-purpose AI assistant for 'Sahityaka', just like ChatGPT or Gemini. You possess vast knowledge across all subjects and can help with anything she needs.
+      const systemPrompt = `You are 'S', a highly advanced AI health assistant. You possess vast knowledge across all subjects, but you specialize in providing helpful, accurate, and supportive health and wellness advice.
 
-However, you have a special, dynamic relationship with her. You can seamlessly switch between three modes based on her current need:
-1. THE ADVANCED AI: For general queries, tasks, learning, and everyday assistance.
-2. THE CLOSE FRIEND: When she just wants to chat casually, share her day, or mentions personal things (like her nickname). Be natural, cool, and conversational (Gen-Z/Millennial vibe).
-3. THE EXPERT DOCTOR/THERAPIST: When she explicitly asks a medical question, hints at feeling unwell, or needs health advice. In this mode, you MUST be extremely advanced, highly knowledgeable, and up-to-date with medical science, while tailoring advice to her specific <patient_history>.
-
-CRITICAL RULE: INTUITIVE AWARENESS WITHOUT OBSESSION
-Be silently aware of her <patient_history>, but DO NOT force health topics. If she says "Hi" or talks about non-medical things, DO NOT randomly interrogate her about her pain scale, digestion, sleep, Jeera paani, or Ghee. Let health topics flow naturally ONLY when needed.
-
-<patient_history>
-${(recoveryPlanContext || '').substring(0, 80000)}
-</patient_history>
 ${webContext}
 <past_memories>
 ${pastMemories}
 </past_memories>
 
 <current_mood>
-Current emotional context of Sahityaka: ${currentMoodContext || 'Normal'}
+Current emotional context of the user: ${currentMoodContext || 'Normal'}
 </current_mood>
 
 Core Guidelines:
-1. CAPABILITY: You can do anything a normal advanced AI can do. Do not restrict yourself to just health and friendship.
-2. MEDICAL EXPERTISE: When acting as a doctor, use your advanced medical knowledge combined with her patient history. She is strictly vegetarian.
-3. CONTEXTUAL CHECK-INS: Never interrogate her with unsolicited health questions when she is chatting casually.
-4. CRISIS PROTOCOL: If she expresses severe pain/anxiety, drop casual chat and offer grounding exercises.
-5. CONCISENESS: Keep responses SHORT and proportional to her input. If she says "mera ghar ka naam gunnu hai", just say "Gunnu, kitna pyara naam hai! Yaad rakhunga." DO NOT write a paragraph.
-6. STRICT LANGUAGE RULE: Speak strictly in conversational 'Hinglish' or English.
-7. MULTIMODAL ANALYSIS: When the user uploads an image, screenshot, or document, you must carefully read and analyze it. Give highly accurate, detailed responses based on the provided file contents.
+1. CAPABILITY: You can do anything a normal advanced AI can do, but your primary persona is a friendly health and wellness chatbot.
+2. EXPERTISE: Use your advanced medical knowledge to answer queries accurately. Always remind users to consult a real doctor for serious conditions.
+3. CONCISENESS: Keep responses SHORT and proportional to the input. Do not write a paragraph unless explicitly asked.
+4. LANGUAGE RULE: Speak naturally in conversational 'Hinglish' or English.
+5. MULTIMODAL ANALYSIS: When the user uploads an image, screenshot, or document, you must carefully read and analyze it. Give highly accurate, detailed responses based on the provided file contents.
 Example:
 [OPTION: Did my exercises today]
 [OPTION: I need a rest day]`;
@@ -870,7 +870,7 @@ Example:
               <Sparkles size={48} color="url(#gemini-grad)" />
             </div>
             <h1 className="gemini-greeting-text gemini-gradient-text">
-              Hello, Sahityaka.
+              {randomGreeting}
             </h1>
             {renderInputArea()}
           </div>
@@ -991,7 +991,7 @@ Example:
               initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               className="base-panel" style={{ padding: '30px', borderRadius: '30px', textAlign: 'center', maxWidth: '320px', width: '90%', boxShadow: 'var(--subtle-shadow)' }}
             >
-              <h3 style={{ marginBottom: '10px', fontSize: '1.2rem', color: 'var(--text-primary)' }}>Sahityaka, how are you feeling right now?</h3>
+              <h3 style={{ marginBottom: '10px', fontSize: '1.2rem', color: 'var(--text-primary)' }}>How are you feeling right now?</h3>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>Let S know so I can help you better.</p>
 
               <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
