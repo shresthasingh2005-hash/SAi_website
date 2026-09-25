@@ -97,6 +97,12 @@ export default function App() {
   const [activeSessionId, setActiveSessionId] = useState(null);
 
   useEffect(() => {
+    if (!auth || !auth.onAuthStateChanged) {
+      console.warn("Firebase Auth is not initialized. Please check Environment Variables.");
+      setAuthLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // Force all users (including public Vercel visitors) to use the 'sahityaka' profile 
       // so they can see all the migrated chats.
@@ -104,7 +110,9 @@ export default function App() {
       
       if (activeUser) {
         // Track when Sahityaka opens the app
-        updateUserLastSeen(activeUser.uid);
+        try {
+          updateUserLastSeen(activeUser.uid);
+        } catch(e) { console.warn("Could not update last seen", e) }
         
         try {
           const loaded = await loadSessionsFromFirestore(activeUser.uid);
@@ -117,14 +125,14 @@ export default function App() {
               const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
               setChatSessions([newSession, ...loaded]);
               setActiveSessionId(newId);
-              saveSessionToFirestore(activeUser.uid, newSession);
+              try { saveSessionToFirestore(activeUser.uid, newSession); } catch(e){}
             }
           } else {
             const newId = Math.random().toString(36).substring(2, 9);
             const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
             setChatSessions([newSession]);
             setActiveSessionId(newId);
-            saveSessionToFirestore(activeUser.uid, newSession);
+            try { saveSessionToFirestore(activeUser.uid, newSession); } catch(e){}
           }
         } catch (error) {
           console.error("Failed to load sessions:", error);
