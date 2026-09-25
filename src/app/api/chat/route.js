@@ -12,8 +12,8 @@ const groq = createGroq({
 });
 
 const localproxy = createOpenAI({
-  baseURL: 'http://127.0.0.1:31415/v1',
-  apiKey: process.env.LOCAL_PROXY_API_KEY || '',
+  baseURL: 'https://dark-bars-beg.loca.lt/v1',
+  apiKey: process.env.LOCAL_PROXY_API_KEY || 'freellmapi-0061d7cc3ccfabaf3588436f5f1f4602de3c83a8c4dadf31',
 });
 import fs from 'fs';
 import path from 'path';
