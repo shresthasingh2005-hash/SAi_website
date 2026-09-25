@@ -12,11 +12,8 @@ const groq = createGroq({
 });
 
 const localproxy = createOpenAI({
-  baseURL: 'https://df4936404b1cb4.lhr.life/v1',
+  baseURL: 'http://127.0.0.1:31415/v1',
   apiKey: process.env.LOCAL_PROXY_API_KEY || 'freellmapi-0061d7cc3ccfabaf3588436f5f1f4602de3c83a8c4dadf31',
-  headers: {
-    'Bypass-Tunnel-Reminder': 'true'
-  }
 });
 import fs from 'fs';
 import path from 'path';
@@ -114,8 +111,14 @@ export async function POST(req) {
     // ==========================================
     console.log("--> [Layer 0] Running Task Detector...");
     let intentStr = '{}';
-    try {
-      const result = await generateWithFallback({
+    
+    // Fast path: skip LLM intent detection for very short basic queries
+    if (lastMessage.trim().split(/\s+/).length < 8) {
+      console.log("--> [Layer 0] Short query detected, skipping LLM detector...");
+      intentStr = '{"task_type":"general", "language":"the language of the prompt", "requires_web_search":false}';
+    } else {
+      try {
+        const result = await generateWithFallback({
         system: `You are the Master Orchestrator (Layer 0). 
         Analyze the user prompt and return ONLY a JSON object with:
         - task_type: "coding" | "medico" | "research" | "general"
@@ -127,7 +130,8 @@ export async function POST(req) {
       });
       intentStr = result.text;
     } catch (err) {
-      console.warn("[Layer 0] API Error. Defaulting to general intent...", err.message);
+        console.warn("[Layer 0] API Error. Defaulting to general intent...", err.message);
+      }
     }
     
     let intent;
