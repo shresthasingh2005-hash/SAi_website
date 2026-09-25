@@ -98,10 +98,9 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // HACK: Force default user if not logged in to bypass login screen
-      let activeUser = currentUser ? { ...currentUser } : { uid: 'general_user', email: 'general_user@app.local' };
-      // Override uid to create a fresh history category without deleting the old one
-      activeUser.uid = activeUser.uid + '_general';
+      // Force all users (including public Vercel visitors) to use the 'sahityaka' profile 
+      // so they can see all the migrated chats.
+      let activeUser = { uid: 'sahityaka', email: 'sahityaka@app.local' };
       
       if (activeUser) {
         // Track when Sahityaka opens the app
