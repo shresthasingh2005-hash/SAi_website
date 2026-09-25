@@ -1,0 +1,55 @@
+{
+  "models": {
+    "claude-opus-5.5": {
+      "provider": "Anthropic (via Gemini persona)",
+      "scores": {
+        "coding": 98.5,
+        "medico": 92.0,
+        "research": 95.5,
+        "general": 96.0
+      },
+      "description": "Unmatched in deep coding logic and long-context code refactoring."
+    },
+    "claude-fable-5.1": {
+      "provider": "Anthropic (via Gemini persona)",
+      "scores": {
+        "coding": 94.0,
+        "medico": 98.8,
+        "research": 96.5,
+        "general": 99.0
+      },
+      "description": "Best for highly empathetic, precise medical analysis and creative formatting."
+    },
+    "gpt-5.6-sol": {
+      "provider": "OpenAI (via Gemini persona)",
+      "scores": {
+        "coding": 97.0,
+        "medico": 94.5,
+        "research": 99.2,
+        "general": 95.0
+      },
+      "description": "Exceptional at deep multi-hop reasoning, agentic planning, and web search aggregation."
+    },
+    "cursor": {
+      "provider": "Cursor (via Gemini persona)",
+      "scores": {
+        "coding": 99.5,
+        "medico": 80.0,
+        "research": 85.0,
+        "general": 88.0
+      },
+      "description": "The absolute peak of codebase navigation, patching, and UI/UX component generation."
+    },
+    "deep-research": {
+      "provider": "Perplexity (via Gemini persona)",
+      "scores": {
+        "coding": 85.0,
+        "medico": 95.0,
+        "research": 99.8,
+        "general": 90.0
+      },
+      "description": "Flawless real-time web scraping and data synthesis."
+    }
+  },
+  "last_updated": "2026-09-25T12:00:00Z"
+}

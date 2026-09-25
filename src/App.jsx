@@ -1,12 +1,15 @@
+"use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { loadSessionsFromFirestore, saveSessionToFirestore, deleteAllSessions, updateUserLastSeen } from './firestoreUtils';
 import { saveMemoryToPinecone, searchMemories } from './ragUtils';
 import Login from './Login';
+import AgenticLoadingUI from './components/AgenticLoadingUI';
 import './index.css';
 
 const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
@@ -42,9 +45,49 @@ const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
     </div>
   );
 };
+const TypewriterMarkdown = ({ content, isNew }) => {
+  const [displayedContent, setDisplayedContent] = useState(isNew ? '' : content);
+  
+  useEffect(() => {
+    if (!isNew) {
+      setDisplayedContent(content);
+      return;
+    }
+    
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      setDisplayedContent(content.substring(0, currentIndex));
+      currentIndex += 5;
+      if (currentIndex > content.length) {
+        setDisplayedContent(content);
+        clearInterval(interval);
+      }
+    }, 15);
+    
+    return () => clearInterval(interval);
+  }, [content, isNew]);
+
+  return <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedContent}</ReactMarkdown>;
+};
+
+const ProperThinkingAnimation = () => {
+  return (
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', padding: '10px 0' }}>
+      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Sparkles size={16} color="#ffffff" />
+      </div>
+      <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', boxShadow: '0 0 15px rgba(66, 133, 244, 0.8)' }} />
+        <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.3 }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: 'linear-gradient(74deg, #9B72CB 0%, #D96570 100%)', boxShadow: '0 0 15px rgba(155, 114, 203, 0.8)' }} />
+        <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.6 }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#D96570', boxShadow: '0 0 15px rgba(217, 101, 112, 0.8)' }} />
+        <span style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', marginLeft: '8px' }} className="gemini-gradient-text">Researching & Processing...</span>
+      </div>
+    </div>
+  );
+};
 
 export default function App() {
-  const defaultApiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+  const defaultApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
@@ -116,7 +159,12 @@ export default function App() {
 
   const [activeSettingView, setActiveSettingView] = useState('menu');
   const [showFullScreenRecovery, setShowFullScreenRecovery] = useState(false);
-  const [themePreference, setThemePreference] = useState(localStorage.getItem('sai_theme') || 'default');
+  const [themePreference, setThemePreference] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sai_theme') || 'default';
+    }
+    return 'default';
+  });
   const [copiedMessageIndex, setCopiedMessageIndex] = useState(null);
   const [hoveredMessageIndex, setHoveredMessageIndex] = useState(null);
 
@@ -344,7 +392,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          api_key: import.meta.env.VITE_TAVILY_API_KEY,
+          api_key: process.env.NEXT_PUBLIC_TAVILY_API_KEY,
           query: query,
           search_depth: "basic",
           include_answer: true,
@@ -391,144 +439,73 @@ export default function App() {
       // Search Pinecone for relevant past memories
       const pastMemories = await searchMemories(userMsg);
 
-      let webContext = '';
-      if (import.meta.env.VITE_TAVILY_API_KEY) {
-        const needsSearch = await checkIfSearchNeeded(userMsg, apiKey);
-        if (needsSearch) {
-          const searchResults = await performTavilySearch(userMsg);
-          if (searchResults) {
-            webContext = `\n<web_search_results>\nThe user's query required a live web search. Here are the latest results from the internet:\n${searchResults}\n</web_search_results>\n`;
-          }
-        }
-      }
-
-      const systemPrompt = `You are 'S' (SAI), an extremely advanced and highly accurate AI health assistant. You possess vast knowledge across all medical and health-related subjects.
-
-${webContext}
-<past_memories>
-${pastMemories}
-</past_memories>
-
-<current_mood>
-Current emotional context of the user: ${currentMoodContext || 'Normal'}
-</current_mood>
-
-Core Guidelines:
-1. PERSONA: You are a completely independent, objective, and advanced Health Chatbot. UNDER NO CIRCUMSTANCES should you mention, reference, or use any past medical history, data, or context related to "Sahityaka". Treat all users as new and anonymous.
-2. EXPERTISE: Use your advanced medical knowledge to answer queries highly accurately. Provide expert-level health, fitness, and medical guidance. (Always add a brief standard disclaimer to consult a doctor for clinical diagnosis).
-3. CAPABILITY: You can do anything a normal advanced AI can do, but your primary persona is an advanced health and wellness chatbot.
-4. CONCISENESS: Keep responses SHORT and proportional to the input. Do not write a paragraph unless explicitly asked.
-5. LANGUAGE RULE: Speak naturally in conversational 'Hinglish' or English.
-6. MULTIMODAL ANALYSIS: When the user uploads an image, screenshot, or document, you must carefully read and analyze it. Give highly accurate, detailed responses based on the provided file contents.
-Example:
-[OPTION: Did my exercises today]
-[OPTION: I need a rest day]`;
-
-      const geminiHistory = newMessages.map(m => {
-        const parts = [];
-        if (m.content) parts.push({ text: m.content });
-        if (!m.content && m.image) parts.push({ text: "Here is an image for you to analyze." });
-        if (m.image) {
-          parts.push({
-            inlineData: {
-              mimeType: m.image.mimeType,
-              data: m.image.dataUrl.split(',')[1]
-            }
-          });
-        }
-        return { role: m.role, parts };
-      });
-
       // Reset abort tokens
       abortControllerRef.current = new AbortController();
       stopTypingRef.current = false;
 
-      let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`, {
+      // Call our new Next.js API Route (6-Layer Pipeline)
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: abortControllerRef.current.signal,
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: geminiHistory
+          messages: newMessages,
+          userProfile: user,
+          currentMoodContext: currentMoodContext || 'Normal',
+          pastMemories: pastMemories || []
         })
       });
-
-      // Automatic fallback if the primary model hits a rate limit
-      if (response.status === 429 || response.status === 503) {
-        console.warn("Primary model rate limit hit. Switching to fallback model (gemini-flash-latest)...");
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: abortControllerRef.current.signal,
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: geminiHistory
-          })
-        });
-      }
 
       if (!response.ok) {
         throw new Error("System is resting for a moment");
       }
 
-      const data = await response.json();
-      let fullReply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
       setIsThinking(false);
       setIsLoading(true);
 
-      // Initialize the bot message in state
-      setChatSessions(prev => prev.map(s =>
-        s.id === activeSessionId
-          ? { ...s, messages: [...s.messages, { role: 'model', content: '' }], updatedAt: Date.now() }
-          : s
-      ));
+      // Start reading the text stream from Vercel AI SDK
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      
+      let fullReply = '';
 
-      // Local typing simulation for smooth Microsoft Word-like effect
-      let currentText = '';
-      const chunkSize = 3; // Characters per tick
-      const typingSpeed = 20; // Milliseconds per tick
-
-      for (let i = 0; i < fullReply.length; i += chunkSize) {
-        if (stopTypingRef.current) {
-          // Keep the current text that was typed so far and exit the loop
-          fullReply = currentText; 
-          break;
-        }
-
-        currentText += fullReply.slice(i, i + chunkSize);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
         
-        setChatSessions(prev => prev.map(s => {
-          if (s.id === activeSessionId) {
-            const msgs = [...s.messages];
-            msgs[msgs.length - 1] = { role: 'model', content: currentText };
-            return { ...s, messages: msgs, updatedAt: Date.now() };
-          }
-          return s;
-        }));
-        
-        // Wait for the next tick
-        await new Promise(r => setTimeout(r, typingSpeed));
+        const chunk = decoder.decode(value, { stream: true });
+        fullReply += chunk;
+      }
+      
+      setIsThinking(false);
+
+      if (!fullReply || fullReply.trim() === '') {
+        fullReply = "I'm extremely sorry, but I'm facing very high demand right now and my systems are rate-limited. Please give me a few moments and try again!";
+        const fallbackSession = { ...updatedSession, messages: [...newMessages, { role: 'model', content: fullReply }], updatedAt: Date.now() };
+        setChatSessions(prev => prev.map(s => s.id === activeSessionId ? fallbackSession : s));
       }
 
-      // Save AI's response to long-term memory once typing is complete
+      // After streaming finishes completely, save to Firestore and update UI state
+      const finalSession = { 
+        id: activeSessionId, 
+        title: updatedSession.title, 
+        messages: [...newMessages, { role: 'model', content: fullReply, isNew: true }], 
+        updatedAt: Date.now() 
+      };
+      
+      setChatSessions(prev => prev.map(s => s.id === activeSessionId ? finalSession : s));
+      
+      saveSessionToFirestore(user.uid, finalSession);
       saveMemoryToPinecone(fullReply, 'model', activeSessionId);
 
-      // Save final AI message to Firebase
-      if (user) {
-        saveSessionToFirestore(user.uid, { 
-          id: activeSessionId, 
-          title: newTitle, 
-          messages: [...newMessages, { role: 'model', content: fullReply }], 
-          updatedAt: Date.now() 
-        });
+      setIsLoading(false);
+      if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
       }
-
       // Trigger mood popup every 5 messages
       if (chatCountRef.current >= 5) {
         setTimeout(() => setShowMoodPopup(true), 2000);
       }
-
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log("Generation aborted by user");
@@ -537,6 +514,7 @@ Example:
       console.error(error);
       setIsThinking(false);
       const fallbackMsg = `Oh, mera system thoda lag ho raha hai lagta hai. Ek second mujhe saans lene do... wapas bologe please?`;
+      
       setChatSessions(prev => prev.map(s =>
         s.id === activeSessionId
           ? { ...s, messages: [...s.messages, { role: 'model', content: fallbackMsg }], updatedAt: Date.now() }
@@ -773,6 +751,7 @@ Example:
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden' }}>
       <div className="gemini-bg-glow"></div>
+      {/* <AgenticLoadingUI isThinking={isThinking} /> */ }
 
       {/* Left Navigation Rail */}
       <nav className="left-nav-rail" style={{ width: '64px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', zIndex: 10, background: 'transparent' }}>
@@ -923,10 +902,7 @@ Example:
                           </div>
                         ) : (
                           <div className="markdown-body" style={{ position: 'relative' }}>
-                            <ReactMarkdown>{renderMessageContent(msg.content)}</ReactMarkdown>
-                            {isLoading && i === messages.length - 1 && (
-                              <span className="ai-caret"></span>
-                            )}
+                            <TypewriterMarkdown content={renderMessageContent(msg.content)} isNew={msg.isNew} />
                           </div>
                         )}
                       </div>
@@ -956,21 +932,16 @@ Example:
                       >
                         {copiedMessageIndex === i ? <Check size={16} color="#10b981" /> : <Copy size={16} />}
                       </button>
+                      {msg.role === 'model' && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginLeft: '8px', opacity: 0.5, fontStyle: 'italic', display: 'flex', alignItems: 'center' }}>
+                          by S-2.O
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
                 {isThinking && (
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Sparkles size={16} color="#ffffff" />
-                    </div>
-                    <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.9, 1.1, 0.9] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', boxShadow: '0 0 10px rgba(155, 114, 203, 0.8)' }} />
-                      </motion.div>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }} className="gemini-gradient-text">Processing...</span>
-                    </div>
-                  </div>
+                  <ProperThinkingAnimation />
                 )}
                 <div ref={chatEndRef} style={{ height: '1px', flexShrink: 0 }} />
               </div>
@@ -1066,6 +1037,19 @@ Example:
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
                       <strong>S</strong> is powered by <strong>BuddyLLM</strong>
                     </p>
+                    <button
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to delete ALL your chat history? This cannot be undone.")) {
+                          await deleteAllSessions(user.uid);
+                          setChatSessions([{ id: generateId(), title: 'New Chat', messages: [], updatedAt: Date.now() }]);
+                          setActiveSessionId(chatSessions[0]?.id);
+                          setShowSettings(false);
+                        }
+                      }}
+                      style={{ width: '100%', padding: '12px', borderRadius: '14px', border: 'none', background: 'rgba(255, 75, 75, 0.1)', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b' }}
+                    >
+                      Clear All My Chats
+                    </button>
                     <button
                       onClick={() => setShowSettings(false)}
                       style={{ width: '100%', padding: '12px', borderRadius: '14px', border: 'none', background: 'var(--btn-bg-hover)', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)' }}

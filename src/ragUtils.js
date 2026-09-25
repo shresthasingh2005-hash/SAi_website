@@ -1,6 +1,6 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const PINECONE_API_KEY = import.meta.env.VITE_PINECONE_API_KEY;
-const IS_PROD = import.meta.env.PROD;
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+const PINECONE_API_KEY = process.env.NEXT_PUBLIC_PINECONE_API_KEY;
+const IS_PROD = process.env.NODE_ENV === 'production';
 const PINECONE_URL = IS_PROD ? "/api/pinecone" : "/pinecone";
 export const generateEmbedding = async (text) => {
   if (!text || text.trim().length === 0) return null;

@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Lock, Mail, ArrowRight, Eye, EyeOff } from 'lucide-react';
