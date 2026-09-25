@@ -97,7 +97,7 @@ export default function App() {
   const [activeSessionId, setActiveSessionId] = useState(null);
 
   useEffect(() => {
-    if (!auth || !auth.onAuthStateChanged) {
+    if (!auth || !auth.app) {
       console.warn("Firebase Auth is not initialized. Please check Environment Variables.");
       setAuthLoading(false);
       return;
