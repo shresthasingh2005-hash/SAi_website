@@ -1,10 +1,14 @@
 import { streamText, generateText } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createGroq } from '@ai-sdk/groq';
 import { createOpenAI } from '@ai-sdk/openai';
 
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'AQ.Ab8RN6JqjZy-1kDZXGBQkgSzIb6g2CP7sHt5TNyrKIhOZQ5CMA',
+});
+
 const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY || '',
+  apiKey: process.env.GROQ_API_KEY || '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',
 });
 
 const localproxy = createOpenAI({
