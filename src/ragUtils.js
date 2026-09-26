@@ -61,14 +61,12 @@ export const saveMemoryToPinecone = async (text, role, sessionId) => {
     
     if (!response.ok) {
       console.error("Pinecone Upsert Failed:", await response.text());
-      alert("Pinecone Upsert Failed! Please check console.");
     } else {
       console.log("Pinecone Upsert Success");
       // Optionally alert for success if needed
     }
   } catch (error) {
     console.error("Pinecone API Error:", error);
-    alert("Pinecone API Error: " + error.message);
   }
 };
 
@@ -113,7 +111,6 @@ export const searchMemories = async (queryText) => {
     }
   } catch (error) {
     console.error("Pinecone Query Error:", error);
-    alert("Pinecone Query Error: " + error.message);
   }
   return "";
 };

@@ -542,20 +542,26 @@ function App() {
     const [activeSessionId, setActiveSessionId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "App.useEffect": ()=>{
+            if (!__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firebaseConfig$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["auth"] || !__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firebaseConfig$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["auth"].app) {
+                console.warn("Firebase Auth is not initialized. Please check Environment Variables.");
+                setAuthLoading(false);
+                return;
+            }
             const unsubscribe = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2d$d90d2ee5$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__z__as__onAuthStateChanged$3e$__["onAuthStateChanged"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firebaseConfig$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["auth"], {
                 "App.useEffect.unsubscribe": async (currentUser)=>{
-                    // HACK: Force default user if not logged in to bypass login screen
-                    let activeUser = currentUser ? {
-                        ...currentUser
-                    } : {
-                        uid: 'general_user',
-                        email: 'general_user@app.local'
+                    // Force all users (including public Vercel visitors) to use the 'sahityaka' profile 
+                    // so they can see all the migrated chats.
+                    let activeUser = {
+                        uid: 'sahityaka',
+                        email: 'sahityaka@app.local'
                     };
-                    // Override uid to create a fresh history category without deleting the old one
-                    activeUser.uid = activeUser.uid + '_general';
                     if ("TURBOPACK compile-time truthy", 1) {
                         // Track when Sahityaka opens the app
-                        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateUserLastSeen"])(activeUser.uid);
+                        try {
+                            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["updateUserLastSeen"])(activeUser.uid);
+                        } catch (e) {
+                            console.warn("Could not update last seen", e);
+                        }
                         try {
                             const loaded = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["loadSessionsFromFirestore"])(activeUser.uid);
                             if (loaded && loaded.length > 0) {
@@ -575,7 +581,9 @@ function App() {
                                         ...loaded
                                     ]);
                                     setActiveSessionId(newId);
-                                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveSessionToFirestore"])(activeUser.uid, newSession);
+                                    try {
+                                        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveSessionToFirestore"])(activeUser.uid, newSession);
+                                    } catch (e) {}
                                 }
                             } else {
                                 const newId = Math.random().toString(36).substring(2, 9);
@@ -589,7 +597,9 @@ function App() {
                                     newSession
                                 ]);
                                 setActiveSessionId(newId);
-                                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveSessionToFirestore"])(activeUser.uid, newSession);
+                                try {
+                                    (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$firestoreUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveSessionToFirestore"])(activeUser.uid, newSession);
+                                } catch (e) {}
                             }
                         } catch (error) {
                             console.error("Failed to load sessions:", error);
@@ -1128,7 +1138,7 @@ function App() {
                                     children: opt
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 577,
+                                    lineNumber: 584,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
@@ -1139,18 +1149,18 @@ function App() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 578,
+                                    lineNumber: 585,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, i, true, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 559,
+                            lineNumber: 566,
                             columnNumber: 13
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 557,
+                    lineNumber: 564,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1218,24 +1228,24 @@ function App() {
                                             size: 18
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 610,
+                                            lineNumber: 617,
                                             columnNumber: 19
                                         }, this),
                                         "Add photos & files"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 598,
+                                    lineNumber: 605,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 587,
+                                lineNumber: 594,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 585,
+                            lineNumber: 592,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1268,7 +1278,7 @@ function App() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 620,
+                                    lineNumber: 627,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1293,7 +1303,7 @@ function App() {
                                             onChange: handleFileChange
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 636,
+                                            lineNumber: 643,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1314,7 +1324,7 @@ function App() {
                                                 size: 24
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 647,
+                                                lineNumber: 654,
                                                 columnNumber: 32
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
                                                 size: 24,
@@ -1323,12 +1333,12 @@ function App() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 647,
+                                                lineNumber: 654,
                                                 columnNumber: 50
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 637,
+                                            lineNumber: 644,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1359,7 +1369,7 @@ function App() {
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 652,
+                                                            lineNumber: 659,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1386,18 +1396,18 @@ function App() {
                                                                 size: 12
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 653,
+                                                                lineNumber: 660,
                                                                 columnNumber: 358
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 653,
+                                                            lineNumber: 660,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 651,
+                                                    lineNumber: 658,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1460,13 +1470,13 @@ function App() {
                                                     }
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 656,
+                                                    lineNumber: 663,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 649,
+                                            lineNumber: 656,
                                             columnNumber: 15
                                         }, this),
                                         isLoading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].button, {
@@ -1502,12 +1512,12 @@ function App() {
                                                 fill: "currentColor"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 716,
+                                                lineNumber: 723,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 705,
+                                            lineNumber: 712,
                                             columnNumber: 17
                                         }, this) : input.trim() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].button, {
                                             initial: {
@@ -1540,36 +1550,36 @@ function App() {
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 729,
+                                                lineNumber: 736,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 719,
+                                            lineNumber: 726,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 631,
+                                    lineNumber: 638,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 617,
+                            lineNumber: 624,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 584,
+                    lineNumber: 591,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/App.jsx",
-            lineNumber: 555,
+            lineNumber: 562,
             columnNumber: 5
         }, this);
     if (authLoading) {
@@ -1591,12 +1601,12 @@ function App() {
                 }
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 741,
+                lineNumber: 748,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/App.jsx",
-            lineNumber: 740,
+            lineNumber: 747,
             columnNumber: 7
         }, this);
     }
@@ -1617,7 +1627,7 @@ function App() {
                 className: "gemini-bg-glow"
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 753,
+                lineNumber: 760,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -1653,12 +1663,12 @@ function App() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 761,
+                                    lineNumber: 768,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 760,
+                                lineNumber: 767,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1674,12 +1684,12 @@ function App() {
                                     size: 20
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 765,
+                                    lineNumber: 772,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 764,
+                                lineNumber: 771,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1694,18 +1704,18 @@ function App() {
                                     size: 20
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 769,
+                                    lineNumber: 776,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 768,
+                                lineNumber: 775,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 758,
+                        lineNumber: 765,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1727,23 +1737,23 @@ function App() {
                                 size: 20
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 776,
+                                lineNumber: 783,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 775,
+                            lineNumber: 782,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 773,
+                        lineNumber: 780,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 757,
+                lineNumber: 764,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -1768,7 +1778,7 @@ function App() {
                             }
                         }, void 0, false, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 785,
+                            lineNumber: 792,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
@@ -1818,7 +1828,7 @@ function App() {
                                                     color: "var(--accent-purple)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 797,
+                                                    lineNumber: 804,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1831,13 +1841,13 @@ function App() {
                                                     children: "S.ai"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 798,
+                                                    lineNumber: 805,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 796,
+                                            lineNumber: 803,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1851,18 +1861,18 @@ function App() {
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 801,
+                                                lineNumber: 808,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 800,
+                                            lineNumber: 807,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 795,
+                                    lineNumber: 802,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1894,14 +1904,14 @@ function App() {
                                                     size: 20
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 810,
+                                                    lineNumber: 817,
                                                     columnNumber: 19
                                                 }, this),
                                                 " New Chat"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 806,
+                                            lineNumber: 813,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -1916,7 +1926,7 @@ function App() {
                                             children: "History"
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 813,
+                                            lineNumber: 820,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1953,7 +1963,7 @@ function App() {
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 829,
+                                                            lineNumber: 836,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1966,24 +1976,24 @@ function App() {
                                                             children: session.title
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 830,
+                                                            lineNumber: 837,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, session.id, true, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 820,
+                                                    lineNumber: 827,
                                                     columnNumber: 23
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 815,
+                                            lineNumber: 822,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 805,
+                                    lineNumber: 812,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2014,7 +2024,7 @@ function App() {
                                                 color: "var(--text-secondary)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 841,
+                                                lineNumber: 848,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2025,35 +2035,35 @@ function App() {
                                                 children: "Settings"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 842,
+                                                lineNumber: 849,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 837,
+                                        lineNumber: 844,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 836,
+                                    lineNumber: 843,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 790,
+                            lineNumber: 797,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 784,
+                    lineNumber: 791,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 782,
+                lineNumber: 789,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2071,7 +2081,7 @@ function App() {
                         hasMessages: messages.length > 0
                     }, void 0, false, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 853,
+                        lineNumber: 860,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2085,12 +2095,12 @@ function App() {
                                     size: 24
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 858,
+                                    lineNumber: 865,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 857,
+                                lineNumber: 864,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2099,13 +2109,13 @@ function App() {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 860,
+                                lineNumber: 867,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 856,
+                        lineNumber: 863,
                         columnNumber: 9
                     }, this),
                     messages.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2127,12 +2137,12 @@ function App() {
                                     color: "url(#gemini-grad)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 866,
+                                    lineNumber: 873,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 865,
+                                lineNumber: 872,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -2140,14 +2150,14 @@ function App() {
                                 children: randomGreeting
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 868,
+                                lineNumber: 875,
                                 columnNumber: 13
                             }, this),
                             renderInputArea()
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 864,
+                        lineNumber: 871,
                         columnNumber: 11
                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                         children: [
@@ -2203,12 +2213,12 @@ function App() {
                                                                     color: "#ffffff"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/App.jsx",
-                                                                    lineNumber: 888,
+                                                                    lineNumber: 895,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 887,
+                                                                lineNumber: 894,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2236,14 +2246,14 @@ function App() {
                                                                             }
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/App.jsx",
-                                                                            lineNumber: 900,
+                                                                            lineNumber: 907,
                                                                             columnNumber: 43
                                                                         }, this),
                                                                         msg.content
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/App.jsx",
-                                                                    lineNumber: 899,
+                                                                    lineNumber: 906,
                                                                     columnNumber: 27
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                     className: "markdown-body",
@@ -2255,23 +2265,23 @@ function App() {
                                                                         isNew: msg.isNew
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 905,
+                                                                        lineNumber: 912,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/App.jsx",
-                                                                    lineNumber: 904,
+                                                                    lineNumber: 911,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 892,
+                                                                lineNumber: 899,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 885,
+                                                        lineNumber: 892,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2311,18 +2321,18 @@ function App() {
                                                                     color: "#10b981"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/App.jsx",
-                                                                    lineNumber: 933,
+                                                                    lineNumber: 940,
                                                                     columnNumber: 53
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"], {
                                                                     size: 16
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/App.jsx",
-                                                                    lineNumber: 933,
+                                                                    lineNumber: 940,
                                                                     columnNumber: 91
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 922,
+                                                                lineNumber: 929,
                                                                 columnNumber: 23
                                                             }, this),
                                                             msg.role === 'model' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2338,24 +2348,24 @@ function App() {
                                                                 children: "by S-2.O"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 936,
+                                                                lineNumber: 943,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 912,
+                                                        lineNumber: 919,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, i, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 878,
+                                                lineNumber: 885,
                                                 columnNumber: 19
                                             }, this)),
                                         isThinking && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ProperThinkingAnimation, {}, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 944,
+                                            lineNumber: 951,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2366,18 +2376,18 @@ function App() {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 946,
+                                            lineNumber: 953,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 876,
+                                    lineNumber: 883,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 875,
+                                lineNumber: 882,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2400,17 +2410,17 @@ function App() {
                                         size: 20
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 958,
+                                        lineNumber: 965,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 953,
+                                    lineNumber: 960,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 951,
+                                lineNumber: 958,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2423,19 +2433,19 @@ function App() {
                                 children: renderInputArea()
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 964,
+                                lineNumber: 971,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 874,
+                        lineNumber: 881,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 851,
+                lineNumber: 858,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2494,7 +2504,7 @@ function App() {
                                 children: "How are you feeling right now?"
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 982,
+                                lineNumber: 989,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2506,7 +2516,7 @@ function App() {
                                 children: "Let S know so I can help you better."
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 983,
+                                lineNumber: 990,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2524,7 +2534,7 @@ function App() {
                                         children: "😫"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 986,
+                                        lineNumber: 993,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2534,7 +2544,7 @@ function App() {
                                         children: "😰"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 987,
+                                        lineNumber: 994,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2544,7 +2554,7 @@ function App() {
                                         children: "☕"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 988,
+                                        lineNumber: 995,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2554,29 +2564,29 @@ function App() {
                                         children: "✨"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 989,
+                                        lineNumber: 996,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 985,
+                                lineNumber: 992,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 978,
+                        lineNumber: 985,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 974,
+                    lineNumber: 981,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 972,
+                lineNumber: 979,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -2641,14 +2651,14 @@ function App() {
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1010,
+                                                lineNumber: 1017,
                                                 columnNumber: 21
                                             }, this),
                                             " Settings"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1009,
+                                        lineNumber: 1016,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2691,13 +2701,13 @@ function App() {
                                                 children: opt
                                             }, opt, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1016,
+                                                lineNumber: 1023,
                                                 columnNumber: 25
                                             }, this);
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1012,
+                                        lineNumber: 1019,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2721,7 +2731,7 @@ function App() {
                                                         children: "S"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1038,
+                                                        lineNumber: 1045,
                                                         columnNumber: 23
                                                     }, this),
                                                     " is powered by ",
@@ -2729,13 +2739,13 @@ function App() {
                                                         children: "BuddyLLM"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1038,
+                                                        lineNumber: 1045,
                                                         columnNumber: 56
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1037,
+                                                lineNumber: 1044,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2767,7 +2777,7 @@ function App() {
                                                 children: "Clear All My Chats"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1040,
+                                                lineNumber: 1047,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2785,7 +2795,7 @@ function App() {
                                                 children: "Close"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1053,
+                                                lineNumber: 1060,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2804,19 +2814,19 @@ function App() {
                                                 children: "Log Out"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1059,
+                                                lineNumber: 1066,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1036,
+                                        lineNumber: 1043,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1008,
+                                lineNumber: 1015,
                                 columnNumber: 17
                             }, this),
                             activeSettingView !== 'menu' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -2846,12 +2856,12 @@ function App() {
                                                     }
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 1076,
+                                                    lineNumber: 1083,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1072,
+                                                lineNumber: 1079,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -2864,13 +2874,13 @@ function App() {
                                                 children: activeSettingView === 'mydata' ? 'My Data' : activeSettingView === 'myhealthdata' ? 'My Health Data' : activeSettingView
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1078,
+                                                lineNumber: 1085,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1071,
+                                        lineNumber: 1078,
                                         columnNumber: 19
                                     }, this),
                                     activeSettingView === 'appearance' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2903,12 +2913,12 @@ function App() {
                                                 ]
                                             }, theme, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1086,
+                                                lineNumber: 1093,
                                                 columnNumber: 25
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1084,
+                                        lineNumber: 1091,
                                         columnNumber: 21
                                     }, this),
                                     activeSettingView === 'theme' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2926,7 +2936,7 @@ function App() {
                                                 }
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1103,
+                                                lineNumber: 1110,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2937,13 +2947,13 @@ function App() {
                                                 children: "Coming Soon"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1104,
+                                                lineNumber: 1111,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1102,
+                                        lineNumber: 1109,
                                         columnNumber: 21
                                     }, this),
                                     activeSettingView === 'mydata' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2969,7 +2979,7 @@ function App() {
                                                         children: "Name"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1111,
+                                                        lineNumber: 1118,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2980,13 +2990,13 @@ function App() {
                                                         children: "Sahityaka Singh"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1112,
+                                                        lineNumber: 1119,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1110,
+                                                lineNumber: 1117,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3004,7 +3014,7 @@ function App() {
                                                         children: "Date of Birth"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1115,
+                                                        lineNumber: 1122,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3015,13 +3025,13 @@ function App() {
                                                         children: "18 Sept 2006"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1116,
+                                                        lineNumber: 1123,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1114,
+                                                lineNumber: 1121,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3039,7 +3049,7 @@ function App() {
                                                         children: "Diet"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1120,
+                                                        lineNumber: 1127,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3050,13 +3060,13 @@ function App() {
                                                         children: "Vegetarian"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1121,
+                                                        lineNumber: 1128,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1119,
+                                                lineNumber: 1126,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3074,7 +3084,7 @@ function App() {
                                                         children: "Weight"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1124,
+                                                        lineNumber: 1131,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3085,19 +3095,19 @@ function App() {
                                                         children: "~50-59 kg"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1125,
+                                                        lineNumber: 1132,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1123,
+                                                lineNumber: 1130,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1109,
+                                        lineNumber: 1116,
                                         columnNumber: 21
                                     }, this),
                                     activeSettingView === 'myhealthdata' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3116,7 +3126,7 @@ function App() {
                                                 children: "Attached Documents"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1132,
+                                                lineNumber: 1139,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3146,12 +3156,12 @@ function App() {
                                                             size: 24
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 1146,
+                                                            lineNumber: 1153,
                                                             columnNumber: 27
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1145,
+                                                        lineNumber: 1152,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3168,7 +3178,7 @@ function App() {
                                                                 children: "Health Recovery Plan"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1149,
+                                                                lineNumber: 1156,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3180,13 +3190,13 @@ function App() {
                                                                 children: "HTML Document • Comprehensive Analysis"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1150,
+                                                                lineNumber: 1157,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1148,
+                                                        lineNumber: 1155,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
@@ -3194,41 +3204,41 @@ function App() {
                                                         color: "var(--text-secondary)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1152,
+                                                        lineNumber: 1159,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1135,
+                                                lineNumber: 1142,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1131,
+                                        lineNumber: 1138,
                                         columnNumber: 21
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1070,
+                                lineNumber: 1077,
                                 columnNumber: 17
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 1003,
+                        lineNumber: 1010,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 999,
+                    lineNumber: 1006,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 997,
+                lineNumber: 1004,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -3289,14 +3299,14 @@ function App() {
                                             size: 24
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 1190,
+                                            lineNumber: 1197,
                                             columnNumber: 17
                                         }, this),
                                         " Back"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 1182,
+                                    lineNumber: 1189,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -3309,13 +3319,13 @@ function App() {
                                     children: "Recovery Plan"
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 1192,
+                                    lineNumber: 1199,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 1177,
+                            lineNumber: 1184,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3334,23 +3344,23 @@ function App() {
                                 title: "Health Recovery Plan"
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1199,
+                                lineNumber: 1206,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/App.jsx",
-                            lineNumber: 1198,
+                            lineNumber: 1205,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 1166,
+                    lineNumber: 1173,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 1164,
+                lineNumber: 1171,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -3413,7 +3423,7 @@ function App() {
                                         children: "Introduction"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1221,
+                                        lineNumber: 1228,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3431,13 +3441,13 @@ function App() {
                                         children: "Beta Version 1.0.0"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1224,
+                                        lineNumber: 1231,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1220,
+                                lineNumber: 1227,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3472,7 +3482,7 @@ function App() {
                                         children: "See What's New"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1229,
+                                        lineNumber: 1236,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3496,29 +3506,29 @@ function App() {
                                         children: "Close"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1237,
+                                        lineNumber: 1244,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1228,
+                                lineNumber: 1235,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 1216,
+                        lineNumber: 1223,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 1212,
+                    lineNumber: 1219,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 1210,
+                lineNumber: 1217,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -3587,12 +3597,12 @@ function App() {
                                             size: 32
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 1264,
+                                            lineNumber: 1271,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1263,
+                                        lineNumber: 1270,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -3605,7 +3615,7 @@ function App() {
                                         children: "Service Unavailable"
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1266,
+                                        lineNumber: 1273,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3618,13 +3628,13 @@ function App() {
                                         children: "We apologize, but this site has been temporarily suspended due to prolonged inactivity and lack of response."
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1269,
+                                        lineNumber: 1276,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1262,
+                                lineNumber: 1269,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3661,42 +3671,42 @@ function App() {
                                                     size: 20
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/App.jsx",
-                                                    lineNumber: 1281,
+                                                    lineNumber: 1288,
                                                     columnNumber: 51
                                                 }, this),
                                                 " Request Sent"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 1281,
+                                            lineNumber: 1288,
                                             columnNumber: 49
                                         }, this),
                                         callbackStatus === 'error' && 'Retry Callback'
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 1274,
+                                    lineNumber: 1281,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1273,
+                                lineNumber: 1280,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 1258,
+                        lineNumber: 1265,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 1254,
+                    lineNumber: 1261,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 1252,
+                lineNumber: 1259,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimatePresence"], {
@@ -3784,12 +3794,12 @@ function App() {
                                     size: 20
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 1307,
+                                    lineNumber: 1314,
                                     columnNumber: 16
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1302,
+                                lineNumber: 1309,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3850,12 +3860,12 @@ function App() {
                                                             strokeWidth: 1.5
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 1320,
+                                                            lineNumber: 1327,
                                                             columnNumber: 28
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1319,
+                                                        lineNumber: 1326,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -3870,7 +3880,7 @@ function App() {
                                                         children: "Introducing S-Memory"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1322,
+                                                        lineNumber: 1329,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3883,13 +3893,13 @@ function App() {
                                                         children: "S now remembers all your past conversations, creating a deeply personalized and seamless experience across all chats."
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1323,
+                                                        lineNumber: 1330,
                                                         columnNumber: 26
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1318,
+                                                lineNumber: 1325,
                                                 columnNumber: 23
                                             }, this),
                                             currentSlide === 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3919,7 +3929,7 @@ function App() {
                                                                 children: "Dynamic AI Persona"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1329,
+                                                                lineNumber: 1336,
                                                                 columnNumber: 28
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3931,13 +3941,13 @@ function App() {
                                                                 children: "S seamlessly adapts to your unique needs."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1330,
+                                                                lineNumber: 1337,
                                                                 columnNumber: 28
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1328,
+                                                        lineNumber: 1335,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4002,12 +4012,12 @@ function App() {
                                                                             color: item.color
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/App.jsx",
-                                                                            lineNumber: 1340,
+                                                                            lineNumber: 1347,
                                                                             columnNumber: 34
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1339,
+                                                                        lineNumber: 1346,
                                                                         columnNumber: 32
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4026,7 +4036,7 @@ function App() {
                                                                                 children: item.t
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1343,
+                                                                                lineNumber: 1350,
                                                                                 columnNumber: 34
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4039,30 +4049,30 @@ function App() {
                                                                                 children: item.desc
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1344,
+                                                                                lineNumber: 1351,
                                                                                 columnNumber: 34
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1342,
+                                                                        lineNumber: 1349,
                                                                         columnNumber: 32
                                                                     }, this)
                                                                 ]
                                                             }, i, true, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1338,
+                                                                lineNumber: 1345,
                                                                 columnNumber: 30
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1332,
+                                                        lineNumber: 1339,
                                                         columnNumber: 26
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1327,
+                                                lineNumber: 1334,
                                                 columnNumber: 23
                                             }, this),
                                             currentSlide === 2 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4088,7 +4098,7 @@ function App() {
                                                         children: "Custom Typing Enabled"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1353,
+                                                        lineNumber: 1360,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4141,13 +4151,13 @@ function App() {
                                                                                         color: "rgba(255,255,255,0.4)"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/App.jsx",
-                                                                                        lineNumber: 1359,
+                                                                                        lineNumber: 1366,
                                                                                         columnNumber: 307
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1359,
+                                                                                lineNumber: 1366,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4170,19 +4180,19 @@ function App() {
                                                                                         color: "rgba(255,255,255,0.4)"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/App.jsx",
-                                                                                        lineNumber: 1360,
+                                                                                        lineNumber: 1367,
                                                                                         columnNumber: 306
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1360,
+                                                                                lineNumber: 1367,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1358,
+                                                                        lineNumber: 1365,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4205,13 +4215,13 @@ function App() {
                                                                                 color: "rgba(255,255,255,0.4)"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1362,
+                                                                                lineNumber: 1369,
                                                                                 columnNumber: 321
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1362,
+                                                                        lineNumber: 1369,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4234,19 +4244,19 @@ function App() {
                                                                                 color: "rgba(255,255,255,0.4)"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1363,
+                                                                                lineNumber: 1370,
                                                                                 columnNumber: 303
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1363,
+                                                                        lineNumber: 1370,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1357,
+                                                                lineNumber: 1364,
                                                                 columnNumber: 28
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4265,7 +4275,7 @@ function App() {
                                                                         color: "rgba(255,255,255,0.6)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1366,
+                                                                        lineNumber: 1373,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4278,7 +4288,7 @@ function App() {
                                                                         children: "Ask S anything..."
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1367,
+                                                                        lineNumber: 1374,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4287,25 +4297,25 @@ function App() {
                                                                         }
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1368,
+                                                                        lineNumber: 1375,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1365,
+                                                                lineNumber: 1372,
                                                                 columnNumber: 28
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1356,
+                                                        lineNumber: 1363,
                                                         columnNumber: 26
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1352,
+                                                lineNumber: 1359,
                                                 columnNumber: 23
                                             }, this),
                                             currentSlide === 3 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4328,12 +4338,12 @@ function App() {
                                                             strokeWidth: 1.5
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/App.jsx",
-                                                            lineNumber: 1376,
+                                                            lineNumber: 1383,
                                                             columnNumber: 28
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1375,
+                                                        lineNumber: 1382,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -4346,7 +4356,7 @@ function App() {
                                                         children: "Bugs Squashed & Glitches Fixed"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1378,
+                                                        lineNumber: 1385,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4358,13 +4368,13 @@ function App() {
                                                         children: "Smoother, faster, and more reliable experience."
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1379,
+                                                        lineNumber: 1386,
                                                         columnNumber: 26
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1374,
+                                                lineNumber: 1381,
                                                 columnNumber: 23
                                             }, this),
                                             currentSlide === 4 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4387,7 +4397,7 @@ function App() {
                                                         children: "What's Next for S"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1384,
+                                                        lineNumber: 1391,
                                                         columnNumber: 26
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4451,12 +4461,12 @@ function App() {
                                                                             color: item.color
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/App.jsx",
-                                                                            lineNumber: 1394,
+                                                                            lineNumber: 1401,
                                                                             columnNumber: 34
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1393,
+                                                                        lineNumber: 1400,
                                                                         columnNumber: 32
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4471,7 +4481,7 @@ function App() {
                                                                                 children: item.t
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1397,
+                                                                                lineNumber: 1404,
                                                                                 columnNumber: 34
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4483,46 +4493,46 @@ function App() {
                                                                                 children: item.desc
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/App.jsx",
-                                                                                lineNumber: 1398,
+                                                                                lineNumber: 1405,
                                                                                 columnNumber: 34
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/App.jsx",
-                                                                        lineNumber: 1396,
+                                                                        lineNumber: 1403,
                                                                         columnNumber: 32
                                                                     }, this)
                                                                 ]
                                                             }, i, true, {
                                                                 fileName: "[project]/src/App.jsx",
-                                                                lineNumber: 1392,
+                                                                lineNumber: 1399,
                                                                 columnNumber: 30
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/App.jsx",
-                                                        lineNumber: 1385,
+                                                        lineNumber: 1392,
                                                         columnNumber: 26
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1383,
+                                                lineNumber: 1390,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, currentSlide, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1312,
+                                        lineNumber: 1319,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/App.jsx",
-                                    lineNumber: 1311,
+                                    lineNumber: 1318,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1310,
+                                lineNumber: 1317,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4554,12 +4564,12 @@ function App() {
                                             size: 24
                                         }, void 0, false, {
                                             fileName: "[project]/src/App.jsx",
-                                            lineNumber: 1418,
+                                            lineNumber: 1425,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1411,
+                                        lineNumber: 1418,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4584,12 +4594,12 @@ function App() {
                                                 }
                                             }, idx, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1423,
+                                                lineNumber: 1430,
                                                 columnNumber: 21
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1421,
+                                        lineNumber: 1428,
                                         columnNumber: 17
                                     }, this),
                                     currentSlide < 4 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4615,13 +4625,13 @@ function App() {
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1434,
+                                                lineNumber: 1441,
                                                 columnNumber: 26
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1428,
+                                        lineNumber: 1435,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         onClick: ()=>setShowWhatsNew(false),
@@ -4646,41 +4656,41 @@ function App() {
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/App.jsx",
-                                                lineNumber: 1443,
+                                                lineNumber: 1450,
                                                 columnNumber: 28
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/App.jsx",
-                                        lineNumber: 1437,
+                                        lineNumber: 1444,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/App.jsx",
-                                lineNumber: 1410,
+                                lineNumber: 1417,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/App.jsx",
-                        lineNumber: 1297,
+                        lineNumber: 1304,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/App.jsx",
-                    lineNumber: 1293,
+                    lineNumber: 1300,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/App.jsx",
-                lineNumber: 1291,
+                lineNumber: 1298,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/App.jsx",
-        lineNumber: 752,
+        lineNumber: 759,
         columnNumber: 5
     }, this);
 }
@@ -5497,9 +5507,20 @@ const firebaseConfig = {
     messagingSenderId: ("TURBOPACK compile-time value", "149061229841"),
     appId: ("TURBOPACK compile-time value", "1:149061229841:web:739e98ad3f58dc4e7bc0b0")
 };
-const app = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$app$2f$dist$2f$esm$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["initializeApp"])(firebaseConfig);
-const auth = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2d$d90d2ee5$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__p__as__getAuth$3e$__["getAuth"])(app);
-const db = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$common$2d$456515ba$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__a___as__getFirestore$3e$__["getFirestore"])(app);
+let app;
+let auth;
+let db;
+if (firebaseConfig.apiKey) {
+    app = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$app$2f$dist$2f$esm$2f$index$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["initializeApp"])(firebaseConfig);
+    auth = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$auth$2f$dist$2f$esm$2f$index$2d$d90d2ee5$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__p__as__getAuth$3e$__["getAuth"])(app);
+    db = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$firebase$2f$firestore$2f$dist$2f$common$2d$456515ba$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__a___as__getFirestore$3e$__["getFirestore"])(app);
+} else {
+    console.warn("Firebase API Key is missing! Firebase will not be initialized.");
+    // Provide mock objects so UI doesn't crash during Vercel build prerendering
+    auth = {};
+    db = {};
+}
+;
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
@@ -5675,14 +5696,12 @@ const saveMemoryToPinecone = async (text, role, sessionId)=>{
         const response = await fetch(targetUrl, fetchOptions);
         if (!response.ok) {
             console.error("Pinecone Upsert Failed:", await response.text());
-            alert("Pinecone Upsert Failed! Please check console.");
         } else {
             console.log("Pinecone Upsert Success");
         // Optionally alert for success if needed
         }
     } catch (error) {
         console.error("Pinecone API Error:", error);
-        alert("Pinecone API Error: " + error.message);
     }
 };
 const searchMemories = async (queryText)=>{
@@ -5718,7 +5737,6 @@ const searchMemories = async (queryText)=>{
         }
     } catch (error) {
         console.error("Pinecone Query Error:", error);
-        alert("Pinecone Query Error: " + error.message);
     }
     return "";
 };

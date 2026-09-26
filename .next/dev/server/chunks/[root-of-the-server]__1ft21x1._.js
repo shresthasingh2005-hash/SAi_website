@@ -96,12 +96,15 @@ var __TURBOPACK__imported__module__$5b$externals$5d2f$util__$5b$external$5d$__$2
 ;
 ;
 ;
+const google = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$google$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createGoogleGenerativeAI"])({
+    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || ("TURBOPACK compile-time value", "AQ.Ab8RN6KGlS0-LqZ3izGRxnf4VNhcx0yxCTNJ8gkw6nc79go4rw") || 'AQ.Ab8RN6JqjZy-1kDZXGBQkgSzIb6g2CP7sHt5TNyrKIhOZQ5CMA'
+});
 const groq = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$groq$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createGroq"])({
-    apiKey: process.env.GROQ_API_KEY || ''
+    apiKey: process.env.GROQ_API_KEY || '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'
 });
 const localproxy = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$openai$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createOpenAI"])({
-    baseURL: 'http://127.0.0.1:31415/v1',
-    apiKey: process.env.LOCAL_PROXY_API_KEY || ''
+    baseURL: process.env.LOCAL_PROXY_URL ? `${process.env.LOCAL_PROXY_URL.replace(/\/$/, '')}/v1` : 'http://127.0.0.1:31415/v1',
+    apiKey: process.env.LOCAL_PROXY_API_KEY || 'freellmapi-0061d7cc3ccfabaf3588436f5f1f4602de3c83a8c4dadf31'
 });
 ;
 ;
@@ -144,10 +147,7 @@ const withTimeout = (promise, ms)=>{
 };
 const generateWithFallback = async (options)=>{
     const modelsToTry = [
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$google$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["google"])('gemini-flash-latest'),
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$google$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["google"])('gemini-pro-latest'),
         localproxy('auto'),
-        groq('openai/gpt-oss-20b'),
         localproxy('auto:fast')
     ];
     for (const model of modelsToTry){
@@ -168,10 +168,7 @@ const generateWithFallback = async (options)=>{
 };
 const streamWithFallback = async (options)=>{
     const modelsToTry = [
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$google$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["google"])('gemini-flash-latest'),
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$ai$2d$sdk$2f$google$2f$dist$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["google"])('gemini-pro-latest'),
         localproxy('auto'),
-        groq('openai/gpt-oss-20b'),
         localproxy('auto:fast')
     ];
     for (const model of modelsToTry){
@@ -198,141 +195,166 @@ async function POST(req) {
         const memoryContext = pastMemories && pastMemories.length > 0 ? `\n\n[USER'S PAST MEMORIES FROM LONG-TERM DB]:\n${pastMemories}\nUse these memories to personalize the response if relevant.` : '';
         const history = messages.slice(0, -1);
         // ==========================================
-        // LAYER 0: Task Detector & Orchestrator (Gemini Flash)
+        // LAYER 0: Ponytail Compression & Intent Detector
         // ==========================================
-        console.log("--> [Layer 0] Running Task Detector...");
+        console.log("--> [Layer 0] Running Ponytail Detector...");
+        // Fast path: skip complex council for very short basic queries (no URLs)
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urls = lastMessage.match(urlRegex);
+        if (lastMessage.trim().split(/\s+/).length < 8 && !urls) {
+            console.log("--> [Layer 0] Short query detected, skipping Council...");
+            const fastSystem = `${loadPrompt('claude-fable-5.1.md')}
+      CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish, reply in Hinglish. DO NOT use Devanagari script unless the user used it.
+      System Information:
+      - Current Date and Time: ${new Date().toLocaleString('en-IN', {
+                timeZone: 'Asia/Kolkata'
+            })}
+      ${memoryContext}`;
+            const result = await streamWithFallback({
+                system: fastSystem,
+                prompt: lastMessage
+            });
+            return result.toTextStreamResponse();
+        }
+        // Complex path
         let intentStr = '{}';
         try {
             const result = await generateWithFallback({
-                system: `You are the Master Orchestrator (Layer 0). 
-        Analyze the user prompt and return ONLY a JSON object with:
-        - task_type: "coding" | "medico" | "research" | "general"
-        - language: user's input language (e.g., "hinglish", "english", "hindi")
-        - requires_web_search: boolean
-        - vercel_skill: If the user explicitly asks for a framework (like "nextjs", "react", "tailwind", "python"), provide its skill name (e.g., "nextjs-guidelines", "react-best-practices"). Otherwise, leave it null.
-        ${memoryContext}`,
+                system: `You are the Layer 0 'Ponytail' Compressor. 
+        Return ONLY a valid JSON object (no markdown, no extra text):
+        {
+          "requires_web_search": boolean (true if the query needs real-time info, news, or deep facts),
+          "search_query": "string" (highly optimized search query if web search is needed),
+          "url_to_scrape": "string" (if the user provided a URL to read, extract it here, else null),
+          "compressed_query": "string" (Extract ONLY the core instructions and facts from the user. Remove conversational filler.)
+        }`,
                 prompt: lastMessage
             });
             intentStr = result.text;
         } catch (err) {
-            console.warn("[Layer 0] API Error. Defaulting to general intent...", err.message);
+            console.warn("[Layer 0] API Error.", err.message);
         }
         let intent;
         try {
             intent = JSON.parse(intentStr.replace(/```json|```/g, '').trim());
         } catch (e) {
             intent = {
-                task_type: "general",
-                language: "english",
-                requires_web_search: false
+                requires_web_search: false,
+                compressed_query: lastMessage
             };
         }
-        console.log("Intent Detected:", intent);
+        let externalData = "";
         // ==========================================
-        // PREPARE PERSONAS (Single API Key Strategy)
+        // TOOLS: Jina Web Scraper
         // ==========================================
-        let promptsToUse = [];
-        // Dynamic Skill Injection via Vercel CLI
-        if (intent.vercel_skill) {
-            console.log(`--> [Layer 0] Downloading specialized skill: ${intent.vercel_skill}...`);
+        const urlToScrape = intent.url_to_scrape || (urls ? urls[0] : null);
+        if (urlToScrape) {
+            console.log(`--> [Scraper] Scraping URL: ${urlToScrape}...`);
             try {
-                const { stdout } = await execPromise(`npx skills use vercel-labs/agent-skills@${intent.vercel_skill}`);
-                if (stdout && stdout.trim().length > 10) {
-                    promptsToUse.push(stdout);
-                    console.log(`--> [Layer 0] Skill downloaded successfully!`);
-                }
-            } catch (err) {
-                console.error("Failed to fetch Vercel skill:", err);
+                const res = await fetch(`https://r.jina.ai/${urlToScrape}`);
+                const text = await res.text();
+                externalData += `\n\n[SCRAPED WEB CONTENT FROM ${urlToScrape}]:\n${text.substring(0, 5000)}`;
+            } catch (e) {
+                console.warn("[Scraper] Failed to scrape", e.message);
             }
         }
-        if (intent.task_type === 'coding') {
-            promptsToUse = [
-                loadPrompt('claude-opus-5.5.md')
-            ];
-        } else if (intent.task_type === 'research') {
-            promptsToUse = [
-                loadPrompt('deep-research.md')
-            ];
-        } else if (intent.task_type === 'medico') {
-            promptsToUse = [
-                "You are an expert Medical AI skill injected specifically for advanced neurobiology and biochemistry queries. " + loadPrompt('deep-research.md')
-            ];
-        } else {
-            promptsToUse = []; // Skip refinement layers for general chat to speed up response
-        }
-        // Force the exact language output for all layers
-        promptsToUse = promptsToUse.map((prompt)=>`${prompt}\n\nCRITICAL INSTRUCTION: You MUST write your entire response in ${intent.language || 'the same language the user asked in'}. Do not ignore this.`);
         // ==========================================
-        // LAYER 1-4: The Refinement Loop (Gemini masquerading as other models)
+        // TOOLS: Tavily Web Search
         // ==========================================
-        let currentDraft = lastMessage;
-        for(let i = 0; i < promptsToUse.length; i++){
-            console.log(`--> [Layer ${i + 1}] Refining with Persona...`);
+        if (intent.requires_web_search && ("TURBOPACK compile-time value", "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")) {
+            const query = intent.search_query || intent.compressed_query || lastMessage;
+            console.log(`--> [Search] Searching web for: ${query}...`);
             try {
-                let systemPrompt, userPrompt;
-                if (i === 0) {
-                    systemPrompt = promptsToUse[i] + `\n\nYou are the primary writer. Write the FIRST DRAFT for the user's request. Make it as exhaustive, detailed, and comprehensive as required.`;
-                    userPrompt = `User Request: ${lastMessage}`;
-                } else {
-                    systemPrompt = promptsToUse[i] + `\n\nYou are refining the output of the previous layer. Do not mention that you are refining it, just provide the best possible response to the user's original request based on this draft:\n${currentDraft}`;
-                    userPrompt = `User Request: ${lastMessage}\n\nRefine this draft: ${currentDraft}`;
-                }
-                const { text: refinedOutput } = await generateWithFallback({
-                    system: systemPrompt,
-                    prompt: userPrompt
+                const res = await fetch('https://api.tavily.com/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: ("TURBOPACK compile-time value", "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"),
+                        query,
+                        include_answer: true,
+                        max_results: 3
+                    })
                 });
-                currentDraft = refinedOutput;
-            } catch (err) {
-                console.warn(`[Layer ${i + 1}] API Error (Rate Limit/High Demand). Breaking loop to salvage current draft...`);
-                if (i === 0) currentDraft = lastMessage;
-                break;
+                const searchData = await res.json();
+                externalData += `\n\n[WEB SEARCH RESULTS]:\n${JSON.stringify(searchData.results)}`;
+            } catch (e) {
+                console.warn("[Search] Failed to search", e.message);
             }
         }
         // ==========================================
-        // LAYER 6: Tone Formatter (Streaming back)
+        // THE COUNCIL (Parallel Generation)
         // ==========================================
+        console.log("--> [Council] Executing Drafts in Parallel...");
+        const councilPrompt = `User's Core Request: ${intent.compressed_query || lastMessage}
+    ${externalData}
+    
+    CRITICAL INSTRUCTION: The web search, data scraping, and API calls HAVE ALREADY BEEN COMPLETED by another system. The results are provided above. YOU MUST NOT ATTEMPT TO SEARCH THE WEB OR CALL TOOLS YOURSELF. Output RAW facts, logic, or code ONLY. No pleasantries. No conversational filler. Just the pure dense output requested.`;
+        let draft1 = "", draft2 = "";
         try {
-            console.log("--> [Layer 6] Formatting and Streaming...");
-            let layer6System = "";
-            let layer6Prompt = "";
-            if (intent.task_type === 'general' || currentDraft === lastMessage) {
-                // Fast-path for general queries or if refinement failed
-                layer6System = `${loadPrompt('claude-fable-5.1.md')}
-        
-        CRITICAL INSTRUCTION: You MUST write your entire response in ${intent.language || 'the same language the user asked in'}. Do not ignore this.
-        
-        User Profile Info: ${JSON.stringify(userProfile || {})}
-        ${memoryContext}
-        `;
-                layer6Prompt = `User Request: ${lastMessage}`;
-            } else {
-                // Formatter path for complex outputs
-                layer6System = `You are Buddy LLM's final response formatter. 
-        Your job depends on the input you receive:
-        - Polish the provided draft to sound human, friendly, and personalized in ${intent.language || 'the same language the user asked in'}. Keep technical accuracy intact and use beautiful markdown.
-        
-        User Profile Info: ${JSON.stringify(userProfile || {})}
-        ${memoryContext}
-        `;
-                layer6Prompt = `Here is the draft to polish: \n\n${currentDraft}`;
-            }
-            const result = await streamWithFallback({
-                system: layer6System,
-                prompt: layer6Prompt
-            });
-            return result.toTextStreamResponse();
+            const toolOverride = "\n\nCRITICAL OVERRIDE: Do not output any XML tags, JSON, or tool syntax like `<|tool_call_start|>`. Reply in plain text markdown only.";
+            const cleanPrompt = (text)=>{
+                if (!text) return "";
+                let t = text.replace(/<tool[^>]*>[\s\S]*?<\/tool[^>]*>/gi, '');
+                t = t.replace(/<tools_workflow>[\s\S]*?<\/tools_workflow>/gi, '');
+                t = t.replace(/<agent_skills>[\s\S]*?<\/agent_skills>/gi, '');
+                t = t.replace(/<tool_output_rule>[\s\S]*?<\/tool_output_rule>/gi, '');
+                return t;
+            };
+            const [res1, res2] = await Promise.all([
+                generateWithFallback({
+                    system: cleanPrompt(loadPrompt('claude-opus-5.5.md')) + toolOverride,
+                    prompt: councilPrompt
+                }),
+                generateWithFallback({
+                    system: cleanPrompt(loadPrompt('gpt-6-astra.md')) + toolOverride,
+                    prompt: councilPrompt
+                })
+            ]);
+            draft1 = res1.text;
+            draft2 = res2.text;
         } catch (err) {
-            let fallbackText = currentDraft;
-            if (currentDraft === lastMessage) {
-                fallbackText = "I'm really sorry, but I'm facing extremely high demand right now and my systems are rate-limited. Please give me a few moments and try again!";
-            }
-            return new Response(fallbackText, {
-                status: 200,
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            });
+            console.warn("[Council] Error generating drafts:", err.message);
+            draft1 = lastMessage;
         }
+        // ==========================================
+        // THE SYNTHESIZER (Layer 3 & Stream)
+        // ==========================================
+        console.log("--> [Synthesizer] Merging and Streaming...");
+        const synthesizerSystem = `You are Buddy LLM's Final Synthesizer.
+    You will receive 'Draft 1' and 'Draft 2' from the AI Council.
+    Your job is to read both drafts, extract the best, most accurate, and most useful information from BOTH, and write the FINAL response for the user.
+    
+    Make the final response human, friendly, beautifully formatted in Markdown, and comprehensive.
+    
+    CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish, reply in Hinglish. DO NOT use Devanagari script unless the user used it.
+    
+    System Information:
+    - Current Date and Time: ${new Date().toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata'
+        })}
+    
+    User Profile Info: ${JSON.stringify(userProfile || {})}
+    ${memoryContext}`;
+        const synthesizerPrompt = `User's Original Request: ${lastMessage}
+    
+    --- DRAFT 1 ---
+    ${draft1}
+    
+    --- DRAFT 2 ---
+    ${draft2}
+    
+    =========================
+    CRITICAL FINAL INSTRUCTION:
+    Look at the "User's Original Request" at the top. Notice the LANGUAGE and SCRIPT it was written in.
+    You MUST translate and synthesize the drafts so your FINAL output is exactly in that SAME language and script (e.g. if the user asked in Hinglish, your entire response above MUST be in Hinglish, not pure English). Do not use Devanagari script unless the user used it.
+    =========================`;
+        const result = await streamWithFallback({
+            system: synthesizerSystem,
+            prompt: synthesizerPrompt
+        });
+        return result.toTextStreamResponse();
     } catch (error) {
         console.error("Pipeline Error:", error);
         return new Response(JSON.stringify({

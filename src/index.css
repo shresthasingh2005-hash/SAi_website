@@ -299,3 +299,12 @@ input::placeholder, textarea::placeholder {
   0% { opacity: 1; transform: scaleY(1); }
   100% { opacity: 0; transform: scaleY(0.9); }
 }
+
+/* OpenSource UI TextLoader Pulse */
+@keyframes osuiPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.osui-text-loader-pulse {
+  animation: osuiPulse cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

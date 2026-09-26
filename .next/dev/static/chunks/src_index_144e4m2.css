@@ -324,4 +324,18 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+@keyframes osuiPulse {
+  0%, 100% {
+    opacity: .4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.osui-text-loader-pulse {
+  animation: cubic-bezier(.4, 0, .6, 1) infinite osuiPulse;
+}
+
 /*# sourceMappingURL=src_index_144e4m2.css.map*/

@@ -10,6 +10,9 @@ import { loadSessionsFromFirestore, saveSessionToFirestore, deleteAllSessions, u
 import { saveMemoryToPinecone, searchMemories } from './ragUtils';
 import Login from './Login';
 import AgenticLoadingUI from './components/AgenticLoadingUI';
+import DarkMidnightMeshBackground from './components/DarkMidnightMeshBackground';
+import DarkEmberBackground from './components/DarkEmberBackground';
+import { TextLoader } from './components/TextLoader';
 import './index.css';
 
 const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
@@ -71,16 +74,43 @@ const TypewriterMarkdown = ({ content, isNew }) => {
 };
 
 const ProperThinkingAnimation = () => {
+  const [statusText, setStatusText] = useState('Loading skills...');
+
+  useEffect(() => {
+    const statuses = [
+      'Loading skills...',
+      'Web search...',
+      'Analyzing context...',
+      'Synthesizing...',
+      'Processing...'
+    ];
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % statuses.length;
+      setStatusText(statuses[i]);
+    }, 2000); // Change text every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', padding: '10px 0' }}>
       <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Sparkles size={16} color="#ffffff" />
       </div>
       <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', boxShadow: '0 0 15px rgba(66, 133, 244, 0.8)' }} />
-        <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.3 }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: 'linear-gradient(74deg, #9B72CB 0%, #D96570 100%)', boxShadow: '0 0 15px rgba(155, 114, 203, 0.8)' }} />
-        <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }} transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut", delay: 0.6 }} style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#D96570', boxShadow: '0 0 15px rgba(217, 101, 112, 0.8)' }} />
-        <span style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', marginLeft: '8px' }} className="gemini-gradient-text">Researching & Processing...</span>
+        <TextLoader text="Thinking..." variant="ocean" textColor="var(--text-secondary)" />
+        <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', opacity: 0.7, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '15px' }}>
+          <motion.span
+            key={statusText}
+            initial={{ opacity: 0, x: -5 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ display: 'inline-block' }}
+          >
+            {statusText}
+          </motion.span>
+        </span>
       </div>
     </div>
   );
@@ -95,6 +125,11 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [chatSessions, setChatSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [bgTheme, setBgTheme] = useState('midnight');
+
+  useEffect(() => {
+    setBgTheme(Math.random() < 0.5 ? 'midnight' : 'ember');
+  }, []);
 
   useEffect(() => {
     if (!auth || !auth.app) {
@@ -757,7 +792,7 @@ export default function App() {
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden' }}>
-      <div className="gemini-bg-glow"></div>
+      {bgTheme === 'midnight' ? <DarkMidnightMeshBackground /> : <DarkEmberBackground />}
       {/* <AgenticLoadingUI isThinking={isThinking} /> */ }
 
       {/* Left Navigation Rail */}
