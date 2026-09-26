@@ -26,29 +26,29 @@ const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
   const isIdle = hasMessages && !isThinking;
 
   return (
-    <div style={{ position: 'absolute', top: '-150px', left: '-150px', right: '-150px', bottom: '-150px', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', top: '-100px', left: '-100px', right: '-100px', bottom: '-100px', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
       <motion.div className="plasma-container"
-        animate={{ opacity: showTypingPlasma ? 1 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.15 : 0.9 }}
+        animate={{ opacity: showTypingPlasma ? 0.8 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.15 : 0.9 }}
         transition={{ duration: 1.5, ease: "easeInOut" }}>
-        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360], x: ['-5vw', '5vw', '-5vw'], y: ['-2vh', '5vh', '-2vh'], scale: [1, 1.2, 1] }} transition={{ duration: 8, ease: 'linear', repeat: Infinity }} />
-        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0], x: ['5vw', '-5vw', '5vw'], y: ['-5vh', '5vh', '-5vh'], scale: [1, 1.25, 1] }} transition={{ duration: 10, ease: 'linear', repeat: Infinity }} />
-        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360], x: ['-2vw', '8vw', '-2vw'], y: ['5vh', '-5vh', '5vh'], scale: [1, 1.3, 1] }} transition={{ duration: 7, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360], x: ['-2vw', '3vw', '-2vw'], y: ['0vh', '3vh', '0vh'], scale: [1, 1.1, 1] }} transition={{ duration: 12, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0], x: ['2vw', '-3vw', '2vw'], y: ['-2vh', '2vh', '-2vh'], scale: [1, 1.15, 1] }} transition={{ duration: 15, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360], x: ['-1vw', '4vw', '-1vw'], y: ['2vh', '-2vh', '2vh'], scale: [1, 1.2, 1] }} transition={{ duration: 10, ease: 'linear', repeat: Infinity }} />
       </motion.div>
 
-      <motion.div animate={{ opacity: showThinkingAura ? 0.9 : 0, y: showThinkingAura ? 0 : -50 }} transition={{ duration: 1.2, ease: "easeInOut" }}
-        style={{ position: 'absolute', top: '150px', left: '150px', right: '150px', height: '40vh', filter: 'blur(80px)', display: 'flex', justifyContent: 'center' }}>
-        <motion.div animate={{ x: ['-40vw', '40vw', '-40vw'], scale: [1, 1.3, 1] }} transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '50vw', height: '25vh', background: '#05D9E8', borderRadius: '50%', opacity: 0.9, marginTop: '-10vh' }} />
-        <motion.div animate={{ x: ['40vw', '-40vw', '40vw'], scale: [1.3, 1, 1.3] }} transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '60vw', height: '25vh', background: '#FF2A6D', borderRadius: '50%', opacity: 0.8, marginTop: '-5vh', position: 'absolute' }} />
+      <motion.div animate={{ opacity: showThinkingAura ? 0.6 : 0, y: showThinkingAura ? 0 : -50 }} transition={{ duration: 1.2, ease: "easeInOut" }}
+        style={{ position: 'absolute', top: '100px', left: '100px', right: '100px', height: '40vh', filter: 'blur(60px)', display: 'flex', justifyContent: 'center' }}>
+        <motion.div animate={{ x: ['-30vw', '30vw', '-30vw'], scale: [1, 1.2, 1] }} transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '40vw', height: '20vh', background: '#05D9E8', borderRadius: '50%', opacity: 0.8, marginTop: '-10vh' }} />
+        <motion.div animate={{ x: ['30vw', '-30vw', '30vw'], scale: [1.2, 1, 1.2] }} transition={{ duration: 5, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '50vw', height: '20vh', background: '#FF2A6D', borderRadius: '50%', opacity: 0.6, marginTop: '-5vh', position: 'absolute' }} />
       </motion.div>
 
       <motion.div animate={{ opacity: isIdle ? 1 : 0 }} transition={{ duration: 3, ease: "easeInOut" }}
-        style={{ position: 'absolute', top: '150px', left: '150px', right: '150px', bottom: '150px', display: 'flex', justifyContent: 'space-between', filter: 'blur(100px)' }}>
-        <motion.div animate={{ opacity: [0.4, 0.8, 0.4], x: ['-2vw', '8vw', '-2vw'], y: ['-2vh', '-8vh', '-2vh'], scale: [1, 1.2, 1] }} transition={{ duration: 8, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '40vw', height: '60vh', background: '#4285F4', borderRadius: '50%', marginLeft: '-15vw', marginTop: '-10vh' }} />
-        <motion.div animate={{ opacity: [0.3, 0.6, 0.3], x: ['2vw', '-10vw', '2vw'], y: ['-2vh', '6vh', '-2vh'], scale: [1, 1.3, 1] }} transition={{ duration: 10, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '50vw', height: '50vh', background: '#9B72CB', borderRadius: '50%', marginRight: '-20vw', bottom: '-10vh', position: 'absolute', right: 0 }} />
+        style={{ position: 'absolute', top: '100px', left: '100px', right: '100px', bottom: '100px', display: 'flex', justifyContent: 'space-between', filter: 'blur(90px)' }}>
+        <motion.div animate={{ opacity: [0.2, 0.4, 0.2], x: ['0vw', '5vw', '0vw'], y: ['0vh', '-5vh', '0vh'], scale: [1, 1.1, 1] }} transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '30vw', height: '50vh', background: '#4285F4', borderRadius: '50%', marginLeft: '-15vw', marginTop: '-10vh' }} />
+        <motion.div animate={{ opacity: [0.15, 0.3, 0.15], x: ['0vw', '-6vw', '0vw'], y: ['0vh', '4vh', '0vh'], scale: [1, 1.2, 1] }} transition={{ duration: 15, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '40vw', height: '40vh', background: '#9B72CB', borderRadius: '50%', marginRight: '-20vw', bottom: '-10vh', position: 'absolute', right: 0 }} />
       </motion.div>
     </div>
   );
