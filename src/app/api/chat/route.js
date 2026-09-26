@@ -179,7 +179,7 @@ export async function POST(req) {
 
     // Force the exact language output for all layers
     promptsToUse = promptsToUse.map(prompt => 
-      `${prompt}\n\nCRITICAL INSTRUCTION: You MUST write your entire response in ${intent.language || 'the same language the user asked in'}. Do not ignore this.`
+      `${prompt}\n\nCRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish (Hindi in English alphabet), reply in Hinglish.`
     );
 
     // ==========================================
@@ -224,7 +224,10 @@ export async function POST(req) {
         // Fast-path for general queries or if refinement failed
         layer6System = `${loadPrompt('claude-fable-5.1.md')}
         
-        CRITICAL INSTRUCTION: You MUST write your entire response in ${intent.language || 'the same language the user asked in'}. Do not ignore this.
+        CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish (Hindi written in English alphabet, e.g. 'kaise ho'), you MUST reply in Hinglish. DO NOT use Devanagari script unless the user used it.
+        
+        System Information:
+        - Current Date and Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
         
         User Profile Info: ${JSON.stringify(userProfile || {})}
         ${memoryContext}
@@ -234,7 +237,11 @@ export async function POST(req) {
         // Formatter path for complex outputs
         layer6System = `You are Buddy LLM's final response formatter. 
         Your job depends on the input you receive:
-        - Polish the provided draft to sound human, friendly, and personalized in ${intent.language || 'the same language the user asked in'}. Keep technical accuracy intact and use beautiful markdown.
+        - Polish the provided draft to sound human, friendly, and personalized. 
+        - CRITICAL: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish (Hindi written in English alphabet), you MUST reply in Hinglish. DO NOT use Devanagari script unless the user used it.
+        
+        System Information:
+        - Current Date and Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
         
         User Profile Info: ${JSON.stringify(userProfile || {})}
         ${memoryContext}
