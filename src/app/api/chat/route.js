@@ -86,7 +86,7 @@ const streamWithFallback = async (options) => {
   for (const model of modelsToTry) {
     try {
       debugLog(`Trying streamText with model: ${model.modelId}`);
-      return await withTimeout(streamText({ ...options, model, maxRetries: 0, maxTokens: 3000 }), 15000);
+      return await withTimeout(streamText({ ...options, model, maxRetries: 0, maxTokens: 3000 }), 45000);
     } catch (err) {
       debugLog(`[Fallback] Streaming Model ${model.modelId} failed: ${err.message}`);
     }
@@ -105,6 +105,7 @@ export async function POST(req) {
       ? `\n\n[USER'S PAST MEMORIES FROM LONG-TERM DB]:\n${pastMemories}\nUse these memories to personalize the response if relevant.`
       : '';
     const history = messages.slice(0, -1);
+    const currentDateStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     // ==========================================
     // LAYER 0: Ponytail Compression & Intent Detector
@@ -119,12 +120,17 @@ export async function POST(req) {
       console.log("--> [Layer 0] Short query detected, skipping Council...");
       
       const fastSystem = `${loadPrompt('claude-fable-5.1.md')}
-      CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish, reply in Hinglish. DO NOT use Devanagari script unless the user used it.
+      CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input.
+      Rules:
+      1. If the user writes in Roman/Latin script (e.g. Hinglish: "aaj konsa din hai"), you MUST reply in Roman script (Hinglish).
+      2. DO NOT use Devanagari script (हिंदी) UNLESS the user explicitly wrote in Devanagari script.
+      3. If the user writes in English, reply in English.
+      
       System Information:
-      - Current Date and Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+      - Current Date and Time: ${currentDateStr}
       ${memoryContext}`;
       
-      const result = await streamWithFallback({ system: fastSystem, prompt: lastMessage });
+      const result = await streamWithFallback({ system: fastSystem, messages });
       return result.toTextStreamResponse();
     }
     
@@ -241,10 +247,14 @@ export async function POST(req) {
     
     Make the final response human, friendly, beautifully formatted in Markdown, and comprehensive.
     
-    CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input. If the user writes in Hinglish, reply in Hinglish. DO NOT use Devanagari script unless the user used it.
+    CRITICAL INSTRUCTION: You MUST reply in the EXACT SAME SCRIPT and LANGUAGE as the user's input.
+    Rules:
+    1. If the user writes in Roman/Latin script (e.g. Hinglish: "aaj konsa din hai"), you MUST reply in Roman script (Hinglish).
+    2. DO NOT use Devanagari script (हिंदी) UNLESS the user explicitly wrote in Devanagari script.
+    3. If the user writes in English, reply in English.
     
     System Information:
-    - Current Date and Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+    - Current Date and Time: ${currentDateStr}
     
     User Profile Info: ${JSON.stringify(userProfile || {})}
     ${memoryContext}`;
