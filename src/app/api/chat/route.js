@@ -255,7 +255,13 @@ export async function POST(req) {
     ${draft1}
     
     --- DRAFT 2 ---
-    ${draft2}`;
+    ${draft2}
+    
+    =========================
+    CRITICAL FINAL INSTRUCTION:
+    Look at the "User's Original Request" at the top. Notice the LANGUAGE and SCRIPT it was written in.
+    You MUST translate and synthesize the drafts so your FINAL output is exactly in that SAME language and script (e.g. if the user asked in Hinglish, your entire response above MUST be in Hinglish, not pure English). Do not use Devanagari script unless the user used it.
+    =========================`;
     
     const result = await streamWithFallback({
       system: synthesizerSystem,
