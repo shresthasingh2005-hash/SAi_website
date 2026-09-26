@@ -202,16 +202,26 @@ export async function POST(req) {
     let draft1 = "", draft2 = "";
     
     try {
-      const opusPersona = "You are Council Member 1 (Opus). You are an elite, highly analytical AI. Analyze the context and provide a structured, logical, and exhaustive draft. CRITICAL INSTRUCTION: You DO NOT have access to tools. Never output <|tool_call_start|> or JSON. Write your response directly in markdown.";
-      const astraPersona = "You are Council Member 2 (Astra). You are a highly creative, precise, and problem-solving AI. Analyze the context and provide a creative and insightful draft. CRITICAL INSTRUCTION: You DO NOT have access to tools. Never output <|tool_call_start|> or JSON. Write your response directly in markdown.";
+      const toolOverride = "\n\nCRITICAL OVERRIDE: Do not output any XML tags, JSON, or tool syntax like `<|tool_call_start|>`. Reply in plain text markdown only.";
+      
+      const cleanPrompt = (text) => {
+        if (!text) return "";
+        // Extremely aggressive removal of tool blocks
+        let t = text.replace(/<tool[^>]*>[\s\S]*?<\/tool[^>]*>/gi, '');
+        t = t.replace(/<tools_workflow>[\s\S]*?<\/tools_workflow>/gi, '');
+        t = t.replace(/<agent_skills>[\s\S]*?<\/agent_skills>/gi, '');
+        t = t.replace(/<tool_output_rule>[\s\S]*?<\/tool_output_rule>/gi, '');
+        return t;
+      };
 
       const [res1, res2] = await Promise.all([
         generateWithFallback({
-          system: opusPersona,
+          system: cleanPrompt(loadPrompt('claude-opus-5.5.md')) + toolOverride,
           prompt: councilPrompt
         }),
         generateWithFallback({
-          system: astraPersona,
+          // NOTE: gpt-6-astra.md does not exist in src/prompts. It will use the fallback.
+          system: cleanPrompt(loadPrompt('gpt-6-astra.md')) + toolOverride,
           prompt: councilPrompt
         })
       ]);
