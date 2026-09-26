@@ -13,6 +13,9 @@ import AgenticLoadingUI from './components/AgenticLoadingUI';
 import DarkMidnightMeshBackground from './components/DarkMidnightMeshBackground';
 import DarkEmberBackground from './components/DarkEmberBackground';
 import { TextLoader } from './components/TextLoader';
+import GradientSendButton from './components/GradientSendButton';
+import { VoicePoweredOrb } from './components/VoicePoweredOrb';
+import { PromptInput } from './components/PromptInput';
 import './index.css';
 
 const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
@@ -25,9 +28,9 @@ const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
       <motion.div className="plasma-container"
         animate={{ opacity: showTypingPlasma ? 0.8 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.15 : 0.9 }}
         transition={{ duration: 1.5, ease: "easeInOut" }}>
-        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360] }} transition={{ rotate: { repeat: Infinity, duration: 25, ease: 'linear' } }} />
-        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0] }} transition={{ rotate: { repeat: Infinity, duration: 30, ease: 'linear' } }} />
-        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360] }} transition={{ rotate: { repeat: Infinity, duration: 20, ease: 'linear' } }} />
+        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360], x: ['-2vw', '3vw', '-2vw'], y: ['0vh', '3vh', '0vh'], scale: [1, 1.1, 1] }} transition={{ duration: 12, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0], x: ['2vw', '-3vw', '2vw'], y: ['-2vh', '2vh', '-2vh'], scale: [1, 1.15, 1] }} transition={{ duration: 15, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360], x: ['-1vw', '4vw', '-1vw'], y: ['2vh', '-2vh', '2vh'], scale: [1, 1.2, 1] }} transition={{ duration: 10, ease: 'linear', repeat: Infinity }} />
       </motion.div>
 
       <motion.div animate={{ opacity: showThinkingAura ? 0.6 : 0, y: showThinkingAura ? 0 : -50 }} transition={{ duration: 1.2, ease: "easeInOut" }}
@@ -40,9 +43,9 @@ const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
 
       <motion.div animate={{ opacity: isIdle ? 1 : 0 }} transition={{ duration: 3, ease: "easeInOut" }}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'space-between', filter: 'blur(90px)' }}>
-        <motion.div animate={{ opacity: [0.2, 0.4, 0.2] }} transition={{ duration: 10, ease: "easeInOut", repeat: Infinity }}
+        <motion.div animate={{ opacity: [0.2, 0.4, 0.2], x: ['0vw', '5vw', '0vw'], y: ['0vh', '-5vh', '0vh'], scale: [1, 1.1, 1] }} transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
           style={{ width: '30vw', height: '50vh', background: '#4285F4', borderRadius: '50%', marginLeft: '-15vw', marginTop: '-10vh' }} />
-        <motion.div animate={{ opacity: [0.15, 0.3, 0.15] }} transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
+        <motion.div animate={{ opacity: [0.15, 0.3, 0.15], x: ['0vw', '-6vw', '0vw'], y: ['0vh', '4vh', '0vh'], scale: [1, 1.2, 1] }} transition={{ duration: 15, ease: "easeInOut", repeat: Infinity }}
           style={{ width: '40vw', height: '40vh', background: '#9B72CB', borderRadius: '50%', marginRight: '-20vw', bottom: '-10vh', position: 'absolute', right: 0 }} />
       </motion.div>
     </div>
@@ -95,12 +98,11 @@ const ProperThinkingAnimation = () => {
 
   return (
     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: 'flex-start', padding: '10px 0' }}>
-      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Sparkles size={16} color="#ffffff" />
+      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <VoicePoweredOrb hue={210} maxRotationSpeed={2} maxHoverIntensity={1} enableVoiceControl={false} />
       </div>
       <div style={{ padding: '4px 0', display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <TextLoader text="Thinking..." variant="ocean" textColor="var(--text-secondary)" />
-        <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', opacity: 0.7, borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: '15px' }}>
+        <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', opacity: 0.7, paddingLeft: '5px' }}>
           <motion.span
             key={statusText}
             initial={{ opacity: 0, x: -5 }}
@@ -622,157 +624,42 @@ export default function App() {
           ))}
         </div>
       )}
-
-        <div style={{ position: 'relative', width: '100%', maxWidth: '720px' }}>
-          <AnimatePresence>
-            {showAddMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                style={{
-                  position: 'absolute', bottom: '100%', left: '16px', marginBottom: '12px',
-                  background: 'var(--sidebar-bg)', padding: '6px', borderRadius: '16px',
-                  boxShadow: 'var(--subtle-shadow)', border: '1px solid var(--btn-bg-hover)',
-                  zIndex: 100, minWidth: '180px'
-                }}
-              >
-                <button
-                  onClick={() => { fileInputRef.current?.click(); setShowAddMenu(false); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
-                    background: 'transparent', border: 'none', color: 'var(--text-primary)',
-                    padding: '10px 14px', borderRadius: '12px', cursor: 'pointer',
-                    fontSize: '0.95rem', fontWeight: 500, transition: 'background 0.2s',
-                    textAlign: 'left'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = 'var(--btn-bg-hover)'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <Paperclip size={18} />
-                  Add photos & files
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div style={{
-            position: 'relative', width: '100%', borderRadius: '32px', padding: '1px', overflow: 'hidden'
-          }}>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+      <div style={{ position: 'relative', width: '100%', maxWidth: '720px', display: 'flex', justifyContent: 'center', zIndex: 10 }}>
+        {isLoading ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              onClick={handleStop}
               style={{
-                position: 'absolute',
-                top: '-50%', left: '-50%', right: '-50%', bottom: '-50%',
-                background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.3) 25%, transparent 50%, rgba(255,255,255,0.3) 75%, transparent 100%)',
-                filter: 'blur(3px)',
-                zIndex: 0
+                background: 'var(--btn-bg)', color: 'var(--text-primary)',
+                border: '1px solid var(--btn-bg-hover)', padding: '12px 24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px',
+                cursor: 'pointer', transition: 'all 0.3s'
               }}
+              title="Stop generating"
+            >
+              <Square size={20} fill="currentColor" /> Stop generating
+            </motion.button>
+          ) : (
+            <PromptInput
+              ref={inputRef}
+              value={input}
+              onChange={setInput}
+              onSubmit={(val, { model, effort, attachments }) => {
+                if (attachments && attachments.length > 0) {
+                   const file = attachments[0]; 
+                   const reader = new FileReader();
+                   reader.onloadend = () => {
+                     setSelectedImage({ dataUrl: reader.result, mimeType: file.type });
+                     setTimeout(() => handleSend(val), 0);
+                   };
+                   reader.readAsDataURL(file);
+                } else {
+                   handleSend(val);
+                }
+              }}
+              placeholder="Ask S anything..."
             />
-            <div style={{
-              position: 'relative', zIndex: 1,
-              display: 'flex', alignItems: 'flex-end', width: '100%',
-              padding: '8px 16px', background: 'var(--btn-bg)', borderRadius: '31px'
-            }}>
-              <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={handleFileChange} />
-              <button
-                onClick={() => setShowAddMenu(!showAddMenu)}
-                style={{
-                  background: showAddMenu ? 'var(--btn-bg-hover)' : 'transparent',
-                  border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '50%',
-                  color: showAddMenu ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {showAddMenu ? <X size={24} /> : <Plus size={24} style={{ transition: 'transform 0.2s' }} />}
-              </button>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '6px 0', marginLeft: '8px' }}>
-                {selectedImage && (
-                  <div style={{ position: 'relative', display: 'inline-block', marginBottom: '8px', alignSelf: 'flex-start' }}>
-                    <img src={selectedImage.dataUrl} alt="Preview" style={{ height: '60px', borderRadius: '8px', objectFit: 'cover' }} />
-                    <button onClick={(e) => { e.preventDefault(); setSelectedImage(null); }} style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={12} /></button>
-                  </div>
-                )}
-                <textarea
-                  ref={inputRef}
-                  rows={1}
-                  placeholder="Ask S anything..."
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
-                  }}
-                  onPaste={(e) => {
-                    const items = e.clipboardData?.items;
-                    if (!items) return;
-                    for (let i = 0; i < items.length; i++) {
-                      if (items[i].type.indexOf('image') !== -1) {
-                        e.preventDefault();
-                        const file = items[i].getAsFile();
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (ev) => {
-                            setSelectedImage({ dataUrl: ev.target.result, mimeType: file.type });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                        break;
-                      }
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                      e.target.style.height = 'auto';
-                    }
-                  }}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  className="gemini-textarea"
-                  style={{
-                    width: '100%', background: 'transparent', border: 'none',
-                    color: 'var(--text-primary)', outline: 'none', fontSize: '16px',
-                    caretColor: 'var(--text-primary)',
-                    fontFamily: 'inherit', padding: 0, margin: 0,
-                    resize: 'none', overflowY: 'auto', lineHeight: '1.5',
-                    maxHeight: '150px', textAlign: 'center'
-                  }}
-                />
-              </div>
-              {isLoading ? (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  onClick={handleStop}
-                  style={{
-                    background: 'transparent', color: 'var(--text-primary)',
-                    border: 'none', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', transition: 'all 0.3s'
-                  }}
-                  title="Stop generating"
-                >
-                  <Square size={20} fill="currentColor" />
-                </motion.button>
-              ) : (input.trim() && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  onClick={() => handleSend(null)}
-                  style={{
-                    background: 'transparent', color: 'var(--text-primary)',
-                    border: 'none', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', transition: 'all 0.3s'
-                  }}
-                >
-                  <Send size={20} />
-                </motion.button>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
     </div>
   );
@@ -794,6 +681,8 @@ export default function App() {
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden' }}>
       {bgTheme === 'midnight' ? <DarkMidnightMeshBackground /> : <DarkEmberBackground />}
       {/* <AgenticLoadingUI isThinking={isThinking} /> */ }
+
+      <AuraSystem isTyping={isFocused || input.trim() !== ''} isThinking={isThinking || isLoading} hasMessages={messages.length > 0} />
 
       {/* Left Navigation Rail */}
       <nav className="left-nav-rail" style={{ width: '64px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', zIndex: 10, background: 'transparent' }}>
@@ -891,8 +780,6 @@ export default function App() {
 
       {/* Main Content Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-
-        <AuraSystem isTyping={isFocused || input.trim() !== ''} isThinking={isThinking || isLoading} hasMessages={messages.length > 0} />
 
         {/* Mobile Header */}
         <div className="mobile-header">
