@@ -197,7 +197,7 @@ export async function POST(req) {
     const councilPrompt = `User's Core Request: ${intent.compressed_query || lastMessage}
     ${externalData}
     
-    CRITICAL INSTRUCTION: Output RAW facts, logic, or code ONLY. No pleasantries. No conversational filler. Just the pure dense output requested.`;
+    CRITICAL INSTRUCTION: The web search, data scraping, and API calls HAVE ALREADY BEEN COMPLETED by another system. The results are provided above. YOU MUST NOT ATTEMPT TO SEARCH THE WEB OR CALL TOOLS YOURSELF. Output RAW facts, logic, or code ONLY. No pleasantries. No conversational filler. Just the pure dense output requested.`;
 
     let draft1 = "", draft2 = "";
     
@@ -206,7 +206,6 @@ export async function POST(req) {
       
       const cleanPrompt = (text) => {
         if (!text) return "";
-        // Extremely aggressive removal of tool blocks
         let t = text.replace(/<tool[^>]*>[\s\S]*?<\/tool[^>]*>/gi, '');
         t = t.replace(/<tools_workflow>[\s\S]*?<\/tools_workflow>/gi, '');
         t = t.replace(/<agent_skills>[\s\S]*?<\/agent_skills>/gi, '');
@@ -220,7 +219,6 @@ export async function POST(req) {
           prompt: councilPrompt
         }),
         generateWithFallback({
-          // NOTE: gpt-6-astra.md does not exist in src/prompts. It will use the fallback.
           system: cleanPrompt(loadPrompt('gpt-6-astra.md')) + toolOverride,
           prompt: councilPrompt
         })
