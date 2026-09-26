@@ -17,6 +17,7 @@ import GradientSendButton from './components/GradientSendButton';
 import { VoicePoweredOrb } from './components/VoicePoweredOrb';
 import { PromptInput } from './components/PromptInput';
 import LogicalLoader from './components/LogicalLoader';
+import AnimatedGradientBackground from './components/AnimatedGradientBackground';
 import './index.css';
 
 const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
@@ -147,6 +148,21 @@ export default function App() {
     return () => unsubscribe();
   }, []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsOffline(!navigator.onLine);
+    }
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const activeSession = chatSessions.find(s => s.id === activeSessionId) || chatSessions[0];
   const messages = activeSession ? activeSession.messages : [];
@@ -640,6 +656,21 @@ export default function App() {
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'row', position: 'relative', overflow: 'hidden' }}>
+      
+      <AnimatePresence>
+        {isOffline && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
+          >
+            <AnimatedGradientBackground />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {bgTheme === 'midnight' ? <DarkMidnightMeshBackground /> : <DarkEmberBackground />}
       {/* <AgenticLoadingUI isThinking={isThinking} /> */ }
 
