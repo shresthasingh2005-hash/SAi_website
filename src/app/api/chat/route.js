@@ -202,13 +202,15 @@ export async function POST(req) {
     let draft1 = "", draft2 = "";
     
     try {
+      const toolOverride = "\n\nCRITICAL OVERRIDE: Ignore any instructions to use tools, load skills, or output JSON format (like `load_skill`). You DO NOT have access to tools. Simply write your final draft directly in plain text/markdown based on the provided context.";
+      
       const [res1, res2] = await Promise.all([
         generateWithFallback({
-          system: loadPrompt('claude-opus-5.5.md') + "\n\nYou are Council Member 1 (Opus). Analyze the context and provide a structured, logical draft. Be highly analytical.",
+          system: loadPrompt('claude-opus-5.5.md') + "\n\nYou are Council Member 1 (Opus). Analyze the context and provide a structured, logical draft. Be highly analytical." + toolOverride,
           prompt: councilPrompt
         }),
         generateWithFallback({
-          system: loadPrompt('gpt-6-astra.md') + "\n\nYou are Council Member 2 (Astra). Analyze the context and provide a creative, precise draft. Focus on problem-solving.",
+          system: loadPrompt('gpt-6-astra.md') + "\n\nYou are Council Member 2 (Astra). Analyze the context and provide a creative, precise draft. Focus on problem-solving." + toolOverride,
           prompt: councilPrompt
         })
       ]);
