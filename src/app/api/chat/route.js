@@ -202,20 +202,16 @@ export async function POST(req) {
     let draft1 = "", draft2 = "";
     
     try {
-      const toolOverride = "\n\nCRITICAL OVERRIDE: Ignore any instructions to use tools, load skills, or output JSON format (like `load_skill`). You DO NOT have access to tools. Simply write your final draft directly in plain text/markdown based on the provided context.";
-      
-      const cleanPrompt = (text) => text
-        .replace(/<tool[\s\S]*?<\/tool[^>]*>/g, '')
-        .replace(/<agent_skills[\s\S]*?<\/agent_skills>/g, '')
-        .replace(/<tools_workflow[\s\S]*?<\/tools_workflow>/g, '');
-      
+      const opusPersona = "You are Council Member 1 (Opus). You are an elite, highly analytical AI. Analyze the context and provide a structured, logical, and exhaustive draft. CRITICAL INSTRUCTION: You DO NOT have access to tools. Never output <|tool_call_start|> or JSON. Write your response directly in markdown.";
+      const astraPersona = "You are Council Member 2 (Astra). You are a highly creative, precise, and problem-solving AI. Analyze the context and provide a creative and insightful draft. CRITICAL INSTRUCTION: You DO NOT have access to tools. Never output <|tool_call_start|> or JSON. Write your response directly in markdown.";
+
       const [res1, res2] = await Promise.all([
         generateWithFallback({
-          system: cleanPrompt(loadPrompt('claude-opus-5.5.md')) + "\n\nYou are Council Member 1 (Opus). Analyze the context and provide a structured, logical draft. Be highly analytical." + toolOverride,
+          system: opusPersona,
           prompt: councilPrompt
         }),
         generateWithFallback({
-          system: cleanPrompt(loadPrompt('gpt-6-astra.md')) + "\n\nYou are Council Member 2 (Astra). Analyze the context and provide a creative, precise draft. Focus on problem-solving." + toolOverride,
+          system: astraPersona,
           prompt: councilPrompt
         })
       ]);
