@@ -601,43 +601,47 @@ export default function App() {
           ))}
         </div>
       )}
-      <div style={{ position: 'relative', width: '100%', maxWidth: '720px', display: 'flex', justifyContent: 'center', zIndex: 10 }}>
-        {isLoading ? (
+      <div style={{ position: 'relative', width: '100%', maxWidth: '720px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', zIndex: 10 }}>
+        <AnimatePresence>
+          {isLoading && (
             <motion.button
-              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.9 }}
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               onClick={handleStop}
               style={{
-                background: 'var(--btn-bg)', color: 'var(--text-primary)',
-                border: '1px solid var(--btn-bg-hover)', padding: '12px 24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px',
-                cursor: 'pointer', transition: 'all 0.3s'
+                background: 'var(--btn-bg, #222)', color: 'var(--text-primary, #fff)',
+                border: '1px solid var(--btn-bg-hover, #444)', padding: '10px 20px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px',
+                cursor: 'pointer', transition: 'all 0.3s', fontSize: '14px', fontWeight: 500, boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
               }}
               title="Stop generating"
             >
-              <Square size={20} fill="currentColor" /> Stop generating
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+              Stop generating
             </motion.button>
-          ) : (
-            <PromptInput
-              ref={inputRef}
-              value={input}
-              onChange={setInput}
-              onSubmit={(val, { model, effort, attachments }) => {
-                if (attachments && attachments.length > 0) {
-                   const file = attachments[0]; 
-                   const reader = new FileReader();
-                   reader.onloadend = () => {
-                     setSelectedImage({ dataUrl: reader.result, mimeType: file.type });
-                     setTimeout(() => handleSend(val), 0);
-                   };
-                   reader.readAsDataURL(file);
-                } else {
-                   handleSend(val);
-                }
-              }}
-              placeholder="Ask S anything..."
-            />
           )}
+        </AnimatePresence>
+        <div style={{ width: '100%', pointerEvents: isLoading ? 'none' : 'auto', opacity: isLoading ? 0.7 : 1, transition: 'opacity 0.3s' }}>
+          <PromptInput
+            ref={inputRef}
+            value={input}
+            onChange={setInput}
+            onSubmit={(val, { model, effort, attachments }) => {
+              if (attachments && attachments.length > 0) {
+                 const file = attachments[0]; 
+                 const reader = new FileReader();
+                 reader.onloadend = () => {
+                   setSelectedImage({ dataUrl: reader.result, mimeType: file.type });
+                   setTimeout(() => handleSend(val), 0);
+                 };
+                 reader.readAsDataURL(file);
+              } else {
+                 handleSend(val);
+              }
+            }}
+            placeholder="Ask S anything..."
+          />
         </div>
+      </div>
     </div>
   );
 

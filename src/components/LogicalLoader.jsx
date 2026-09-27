@@ -60,22 +60,18 @@ const LogicalLoader = ({ isThinking, query = "" }) => {
 
 const StyledWrapper = styled.div`
   .card {
-    /* color used to softly clip top and bottom of the .words container */
-    --bg-color: #111;
-    background-color: var(--bg-color);
-    padding: 1rem 2rem;
-    border-radius: 1.25rem;
+    padding: 0;
     display: inline-block;
   }
   .loader {
-    color: rgb(124, 124, 124);
-    font-family: "Poppins", sans-serif;
+    color: var(--text-secondary, rgb(124, 124, 124));
+    font-family: "Inter", "Poppins", sans-serif;
     font-weight: 500;
-    font-size: 25px;
+    font-size: 1rem;
     -webkit-box-sizing: content-box;
     box-sizing: content-box;
-    height: 40px;
-    padding: 10px 10px;
+    height: 30px;
+    padding: 10px 0px;
     display: flex;
     border-radius: 8px;
     align-items: center;
@@ -88,31 +84,19 @@ const StyledWrapper = styled.div`
   .words {
     overflow: hidden;
     position: relative;
-    height: 40px;
+    height: 30px;
     display: flex;
     align-items: center;
-  }
-  
-  .words::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      var(--bg-color) 10%,
-      transparent 30%,
-      transparent 70%,
-      var(--bg-color) 90%
-    );
-    z-index: 20;
-    pointer-events: none;
+    -webkit-mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
+    mask-image: linear-gradient(transparent, black 20%, black 80%, transparent);
   }
 
   .word {
     display: block;
     height: 100%;
-    line-height: 40px;
+    line-height: 30px;
     padding-left: 6px;
-    color: #956afa;
+    color: var(--accent-color, #956afa);
   }
 `;
 

@@ -687,7 +687,8 @@ export const PromptInput = React.forwardRef(
               overflow: "hidden",
             }}
             className={cn(
-              "relative w-full border border-border bg-card shadow-sm focus-within:border-ring/40 focus-within:ring-1 focus-within:ring-ring/20 hover:border-border/80 z-10",
+              "relative w-full border shadow-lg focus-within:ring-2 focus-within:ring-white/20 z-10",
+              "bg-[var(--glass-bg,rgba(30,30,30,0.6))] backdrop-blur-xl border-white/10",
               expanded ? "cursor-text" : "cursor-default"
             )}
           >
@@ -796,13 +797,23 @@ export const PromptInput = React.forwardRef(
             <div
               onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} 
               className={cn(
-                "absolute right-1 bottom-[3px] z-[10] transition-all duration-300 outline-none",
+                "absolute right-2 bottom-[6px] z-[10] transition-all duration-300 outline-none",
                 hasValue 
                   ? "opacity-100 translate-y-0 scale-100" 
                   : "opacity-40 grayscale cursor-not-allowed pointer-events-none scale-95"
               )}
             >
-              <GradientSendButton onClick={hasValue ? handleSubmit : undefined} />
+              <button
+                type="button"
+                onClick={hasValue ? handleSubmit : undefined}
+                className="flex size-10 items-center justify-center rounded-full bg-[var(--accent-color,#956afa)] text-white shadow-md transition-all duration-200 hover:scale-105 active:scale-95 outline-none"
+                aria-label="Send message"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
