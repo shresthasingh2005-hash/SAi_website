@@ -1001,10 +1001,12 @@ export default function App() {
 
             {/* Hidden items that show on hover */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', opacity: (isHoveringSidebar || isSidebarPinned) ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: (isHoveringSidebar || isSidebarPinned) ? 'auto' : 'none', overflow: 'hidden', whiteSpace: 'nowrap', flex: 1 }}>
-              <button onClick={createNewChat} className="icon-btn" style={{ width: '100%', height: '40px', background: 'var(--btn-bg)', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', justifyContent: 'flex-start', borderRadius: '12px' }}>
-                <Plus size={20} style={{ flexShrink: 0 }} />
-                <span>New Chat</span>
-              </button>
+              {user && (
+                <button onClick={createNewChat} className="icon-btn" style={{ width: '100%', height: '40px', background: 'var(--btn-bg)', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', justifyContent: 'flex-start', borderRadius: '12px' }}>
+                  <Plus size={20} style={{ flexShrink: 0 }} />
+                  <span>New Chat</span>
+                </button>
+              )}
               
               <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px', marginTop: '8px', padding: '0 16px' }}>History</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1, paddingRight: '4px' }} className="prompt-scrollbar">
@@ -1101,12 +1103,14 @@ export default function App() {
               </div>
 
               <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
-                <button
-                  onClick={createNewChat}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'var(--accent-color)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 500, marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,113,227,0.3)' }}
-                >
-                  <Plus size={20} /> New Chat
-                </button>
+                {user && (
+                  <button
+                    onClick={createNewChat}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', borderRadius: '16px', background: 'var(--accent-color)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 500, marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,113,227,0.3)' }}
+                  >
+                    <Plus size={20} /> New Chat
+                  </button>
+                )}
 
                 <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px', marginBottom: '12px', marginLeft: '4px' }}>History</h3>
 
