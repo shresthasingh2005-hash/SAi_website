@@ -69,10 +69,10 @@ const withTimeout = (promise, ms) => {
 
 const generateWithFallback = async (options) => {
   const modelsToTry = [
+    localproxy('auto'),
     google('gemini-1.5-flash'),
     google('gemini-2.0-flash-exp'),
     groq('qwen/qwen3.8-27b'),
-    localproxy('auto'),
   ];
   
   for (const model of modelsToTry) {
@@ -89,10 +89,10 @@ const generateWithFallback = async (options) => {
 
 const streamWithFallback = async (options) => {
   const modelsToTry = [
+    localproxy('auto'),
     google('gemini-1.5-flash'),
     google('gemini-2.0-flash-exp'),
     groq('qwen/qwen3.8-27b'),
-    localproxy('auto'),
   ];
 
   for (const model of modelsToTry) {
