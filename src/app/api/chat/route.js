@@ -68,8 +68,8 @@ const generateWithFallback = async (options) => {
   const modelsToTry = [
     localproxy('auto'),
     localproxy('auto:fast'),
-    google('models/gemini-1.5-flash'),
-    groq('llama-3.1-70b-versatile')
+    google('gemini-1.5-flash'),
+    groq('llama3-70b-8192')
   ];
   
   for (const model of modelsToTry) {
@@ -88,8 +88,8 @@ const streamWithFallback = async (options) => {
   const modelsToTry = [
     localproxy('auto'),
     localproxy('auto:fast'),
-    google('models/gemini-1.5-flash'),
-    groq('llama-3.1-70b-versatile')
+    google('gemini-1.5-flash'),
+    groq('llama3-70b-8192')
   ];
 
   for (const model of modelsToTry) {
