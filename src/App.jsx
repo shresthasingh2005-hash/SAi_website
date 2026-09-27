@@ -211,7 +211,9 @@ export default function App() {
           setActiveSessionId(fallbackId);
         }
       } else {
-        setChatSessions([]);
+        const guestId = Math.random().toString(36).substring(2, 9);
+        setChatSessions([{ id: guestId, title: 'New Chat', messages: [], updatedAt: Date.now() }]);
+        setActiveSessionId(guestId);
       }
       setUser(activeUser);
       setAuthLoading(false);
