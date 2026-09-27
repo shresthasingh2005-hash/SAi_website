@@ -28,7 +28,7 @@ export const generateEmbedding = async (text) => {
 /**
  * Saves a message and its embedding to Pinecone
  */
-export const saveMemoryToPinecone = async (text, role, sessionId) => {
+export const saveMemoryToPinecone = async (text, role, sessionId, uid = 'anonymous') => {
   if (role !== 'user' && role !== 'model') return;
   // We only really need to remember user inputs and important model outputs.
   // For simplicity, let's embed all non-empty messages.
@@ -45,14 +45,14 @@ export const saveMemoryToPinecone = async (text, role, sessionId) => {
       body: JSON.stringify({
         endpoint: '/vectors/upsert',
         payload: {
-          vectors: [{ id, values: vector, metadata: { text, role, sessionId, timestamp: Date.now() } }]
+          vectors: [{ id, values: vector, metadata: { text, role, sessionId, uid, timestamp: Date.now() } }]
         }
       })
     } : {
       method: 'POST',
       headers: { 'Api-Key': PINECONE_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        vectors: [{ id, values: vector, metadata: { text, role, sessionId, timestamp: Date.now() } }]
+        vectors: [{ id, values: vector, metadata: { text, role, sessionId, uid, timestamp: Date.now() } }]
       })
     };
     
@@ -73,7 +73,7 @@ export const saveMemoryToPinecone = async (text, role, sessionId) => {
 /**
  * Searches Pinecone for past memories similar to the user's current question
  */
-export const searchMemories = async (queryText) => {
+export const searchMemories = async (queryText, uid = 'anonymous') => {
   const vector = await generateEmbedding(queryText);
   if (!vector) return "";
 
@@ -83,12 +83,12 @@ export const searchMemories = async (queryText) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         endpoint: '/query',
-        payload: { vector, topK: 5, includeMetadata: true }
+        payload: { vector, topK: 5, includeMetadata: true, filter: { uid } }
       })
     } : {
       method: 'POST',
       headers: { 'Api-Key': PINECONE_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vector, topK: 5, includeMetadata: true })
+      body: JSON.stringify({ vector, topK: 5, includeMetadata: true, filter: { uid } })
     };
 
     const targetUrl = IS_PROD ? PINECONE_URL : `${PINECONE_URL}/query`;

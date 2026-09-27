@@ -4,6 +4,8 @@ import * as React from "react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { cn } from "../lib/utils";
 import GradientSendButton from "./GradientSendButton";
+import SendLoader from "./SendLoader";
+import InputCursorLoader from "./InputCursorLoader";
 
 const SPRING_TRANSITION = "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
 const SMOOTH_HEIGHT_TRANSITION = "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.15s ease-out";
@@ -41,7 +43,7 @@ function ModelIcon({ model, className }) {
     "Composer 2.5": "https://cdn.21st.dev/assets/mirror/7d/7dc00bc09f225fcda46cbc9c6b669c69c025a231877d6c17baa6a003f04f02b2.svg",
     "Gemini 3.5 Flash": "https://cdn.21st.dev/assets/mirror/cd/cda2df6631d5fa227de3fa04ed78cf354f910ba92a9f086e7455655c10ad9d09.svg",
     "GPT 5.5": "https://cdn.21st.dev/assets/mirror/b9/b93fa7942be639a1dae60194ff12141145d7d9fd59581582d6ff23335755f19c.svg",
-    "Opus 4.8": "https://cdn.21st.dev/assets/mirror/5d/5de1221c77cc91e748066fd642ad0eee1c1fa65328814f5178166f901e599709.svg",
+    "Opus 5.5": "https://cdn.21st.dev/assets/mirror/5d/5de1221c77cc91e748066fd642ad0eee1c1fa65328814f5178166f901e599709.svg",
     "GLM 5.2": "https://cdn.21st.dev/assets/mirror/b2/b2a6c0ff63efd8a555edf8a174ea6fcfeca120ac1595a2d461ca11d3ae89276c.svg"
   };
 
@@ -244,12 +246,14 @@ export const PromptInput = React.forwardRef(
       onSubmit,
       placeholder = "Ask anything",
       className,
-      models = ["GPT 5.5", "Opus 4.8", "Gemini 3.5 Flash", "Composer 2.5", "GLM 5.2"],
+      models = ["GPT 5.5", "Opus 5.5", "Gemini 3.5 Flash", "Composer 2.5", "GLM 5.2"],
       efforts = ["Low", "Medium", "Max Effort"],
       defaultValue = "",
       value: controlledValue,
       onChange,
       maxAttachments = 6,
+      isThinking = false,
+      onStop,
     },
     ref
   ) => {
@@ -259,9 +263,22 @@ export const PromptInput = React.forwardRef(
     const [selectedModel, setSelectedModel] = useState(models[0]);
     const [effortIndex, setEffortIndex] = useState(1);
     const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
+    const [dotCount, setDotCount] = useState(0);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setDotCount(prev => (prev + 1) % 4);
+      }, 500);
+      return () => clearInterval(interval);
+    }, []);
+
+    const animatedPlaceholder = `Ask S.Ai a question${'.'.repeat(dotCount)}`;
 
     const [attachments, setAttachments] = useState([]);
     const [activeAttachment, setActiveAttachment] = useState(null);
+    const [isFocused, setIsFocused] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef(null);
 
     const [isRecording, setIsRecording] = useState(false);
     const [audioData, setAudioData] = useState(new Array(5).fill(0));
@@ -289,6 +306,7 @@ export const PromptInput = React.forwardRef(
     const topFadeRef = useRef(null);
     const bottomFadeRef = useRef(null);
     const fileInputRef = useRef(null);
+    const imageInputRef = useRef(null);
     const thumbRefs = useRef(new Map());
 
     useEffect(() => {
@@ -312,6 +330,12 @@ export const PromptInput = React.forwardRef(
       setIsSmoothResize(true); 
       if (!isControlled) setLocalValue(val);
       onChange?.(val);
+      
+      setIsTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false);
+      }, 800);
     }, [isControlled, onChange]);
 
     const expand = () => {
@@ -558,6 +582,11 @@ export const PromptInput = React.forwardRef(
       fileInputRef.current?.click();
     };
 
+    const openImageChooser = (e) => {
+      e.stopPropagation();
+      imageInputRef.current?.click();
+    };
+
     const handleFilesChosen = async (e) => {
       const files = Array.from(e.target.files ?? []);
       e.target.value = ""; 
@@ -638,203 +667,192 @@ export const PromptInput = React.forwardRef(
             internalContainerRef.current = node;
           }}
           onBlur={handleBlur}
-          className={cn("relative flex flex-col w-full", className)}
-          style={{
-            maxWidth: expanded ? 720 : 320,
-            transition: isSmoothResize ? "max-width 0.15s ease-out" : "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-          }}
+          className={cn("relative flex flex-col w-full mx-auto", className)}
+          style={{ maxWidth: 760, margin: '0 auto' }}
         >
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json,.md"
+            accept=".pdf,.doc,.docx,.txt,.csv,.json,.md"
             multiple
             onChange={handleFilesChosen}
             className="hidden"
             tabIndex={-1}
             aria-hidden="true"
+            style={{ display: 'none' }}
           />
-
-          <div
-            aria-hidden={!hasAttachments}
-            style={{
-              height: hasAttachments && expanded ? 68 : 0,
-              transition: isSmoothResize
-                ? "height 0.15s ease-out"
-                : "height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-            }}
-            className="w-full relative z-0 overflow-hidden"
-          >
-            <div
-              style={{
-                position: "absolute",
-                bottom: -8,
-                left: 20,
-                right: 20,
-                height: 68,
-                transform: hasAttachments && expanded ? "translateY(0)" : "translateY(100%)",
-                opacity: hasAttachments && expanded ? 1 : 0,
-                transition: isSmoothResize
-                  ? "transform 0.15s ease-out, opacity 0.15s ease-out"
-                  : "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease-out",
-              }}
-              className="border border-border border-b-0 bg-muted rounded-t-2xl px-2 pt-2 pb-1 flex items-start gap-2 overflow-x-auto prompt-scrollbar"
-            >
-              {attachments.map((attachment, index) => (
-                <AttachmentThumb
-                  key={attachment.id}
-                  attachment={attachment}
-                  index={index}
-                  onRemove={removeAttachment}
-                  onOpen={(a, rect) => setActiveAttachment({ attachment: a, rect })}
-                  registerRef={(id, el) => thumbRefs.current.set(id, el)}
-                />
-              ))}
-            </div>
-          </div>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFilesChosen}
+            className="hidden"
+            tabIndex={-1}
+            aria-hidden="true"
+            style={{ display: 'none' }}
+          />
 
           <div
             onMouseDown={(e) => {
               const isTextarea = e.target === textareaRef.current;
-              if (expanded && !isTextarea && !isRecording) {
+              if (!isTextarea && !isRecording) {
                 e.preventDefault();
                 textareaRef.current?.focus();
               }
             }}
             style={{
-              borderRadius: 24,
-              height: expanded ? containerHeight : 48,
-              transition: isSmoothResize ? SMOOTH_HEIGHT_TRANSITION : SPRING_TRANSITION,
-              overflow: "hidden",
+              borderRadius: '20px',
+              minHeight: '136px',
+              backgroundColor: 'rgba(15, 15, 15, 0.45)', // Translucent glassmorphism
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              overflow: 'hidden'
             }}
-            className={cn(
-              "relative w-full border shadow-lg focus-within:ring-2 focus-within:ring-white/20 z-10",
-              "bg-[var(--glass-bg,rgba(30,30,30,0.6))] backdrop-blur-xl border-white/10",
-              expanded ? "cursor-text" : "cursor-default"
-            )}
+            className="w-full relative focus-within:border-white/20 transition-colors"
           >
-            <style dangerouslySetInnerHTML={{ __html: `
-              .prompt-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; background: transparent; }
-              .prompt-scrollbar::-webkit-scrollbar-track { background: transparent; }
-              .prompt-scrollbar::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
-              .prompt-scrollbar:hover::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); }
-            `}} />
+            {/* ATTACHMENTS PREVIEW */}
+            {hasAttachments && (
+              <div className="w-full relative z-10 px-4 pt-4 pb-0 flex items-start gap-2 overflow-x-auto prompt-scrollbar">
+                {attachments.map((attachment, index) => (
+                  <AttachmentThumb
+                    key={attachment.id}
+                    attachment={attachment}
+                    index={index}
+                    onRemove={removeAttachment}
+                    onOpen={(a, rect) => setActiveAttachment({ attachment: a, rect })}
+                    registerRef={(id, el) => thumbRefs.current.set(id, el)}
+                  />
+                ))}
+              </div>
+            )}
 
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => handleValueChange(e.target.value)}
-              onScroll={updateFades}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-                if (e.key === "Escape" && value.trim() === "" && !hasAttachments) {
-                  setIsSmoothResize(false);
-                  setExpanded(false);
-                  setIsModelSelectOpen(false);
-                }
-              }}
-              placeholder={placeholder}
-              aria-label="Prompt"
-              disabled={isRecording}
-              style={{
-                top: expanded ? '12px' : '0px',
-                paddingLeft: '24px',
-                paddingRight: '24px',
-                transition: isSmoothResize
-                  ? "height 0.15s ease-out"
-                  : "opacity 0.3s ease-out, transform 0.3s ease-out, top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-              }}
-              className={cn(
-                "prompt-scrollbar absolute inset-x-0 z-[1] w-full resize-none bg-transparent pt-[13px] pb-2 text-[15px] leading-[22px] text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground/80 cursor-text",
-                expanded ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none",
-                isScrolling ? "overflow-y-auto" : "overflow-y-hidden",
-                isRecording && "pointer-events-none"
-              )}
-            />
+            {/* TEXTAREA SECTION */}
+            <div style={{ flex: 1, position: 'relative' }}>
+              <style dangerouslySetInnerHTML={{ __html: `
+                .prompt-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; background: transparent; }
+                .prompt-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .prompt-scrollbar::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+                .prompt-scrollbar:hover::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); }
+              `}} />
 
-            <div
-              ref={topFadeRef}
-              className="absolute left-4 right-12 z-[2] h-8 bg-gradient-to-b from-card via-card/90 to-transparent pointer-events-none"
-              style={{
-                top: expanded ? '12px' : '0px',
-                transition: isSmoothResize ? "none" : "top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-              }}
-            />
-            <div
-              ref={bottomFadeRef}
-              className="absolute left-4 right-12 z-[2] h-8 bg-gradient-to-t from-card via-card/90 to-transparent pointer-events-none"
-              style={{ 
-                opacity: 0, 
-                top: `${textareaHeight - 32}px`,
-                transition: isSmoothResize ? "top 0.15s ease-out" : "top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={expand}
-              style={{ paddingLeft: '24px', paddingRight: '24px', transition: isSmoothResize ? "none" : "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)" }}
-              className={cn(
-                "absolute inset-x-0 top-0 bottom-0 z-[1] flex items-center cursor-text text-left text-[15px] font-medium text-muted-foreground/80 outline-none",
-                !expanded ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-105 translate-y-1 pointer-events-none"
-              )}
-              aria-label="Open prompt input"
-            >
-              {placeholder}
-            </button>
-
-            <div
-              className={cn(
-                "absolute bottom-2 left-3 right-12 z-[10] flex items-center gap-0 transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                expanded && !isRecording ? "opacity-100 blur-0 translate-y-0 pointer-events-auto" : "opacity-0 blur-sm translate-y-2 pointer-events-none"
-              )}
-            >
-              <button
-                type="button" onMouseDown={(e) => e.preventDefault()} onClick={openFileChooser} disabled={attachments.length >= maxAttachments}
-                className="flex size-7 items-center justify-center rounded-full text-foreground/50 transition-all duration-200 hover:bg-accent/60 hover:text-foreground outline-none cursor-default disabled:opacity-40 disabled:pointer-events-none"
-              >
-                <PlusIcon />
-              </button>
+              <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={(e) => handleValueChange(e.target.value)}
+                onScroll={updateFades}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder={animatedPlaceholder}
+                aria-label="Prompt"
+                disabled={isRecording}
+                style={{
+                  width: '100%',
+                  minHeight: '80px',
+                  height: Math.max(80, Math.min(textareaHeight, 160)) + 'px',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: '#e2e8f0',
+                  padding: hasAttachments ? '12px 20px' : '20px 20px',
+                  resize: 'none',
+                  fontSize: '15px'
+                }}
+                className={cn("prompt-scrollbar", isScrolling ? "overflow-y-auto" : "overflow-y-hidden")}
+              />
             </div>
+            
+            {/* ACTION BAR DIVIDER */}
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', width: '100%' }} />
 
-            <div
-              className={cn(
-                "absolute right-12 bottom-2 z-[10] flex h-8 items-center justify-end gap-[3px] transition-all duration-400 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                isRecording ? "w-16 opacity-100 translate-x-0" : "w-0 opacity-0 translate-x-4 pointer-events-none"
-              )}
-            >
-              {audioData.map((val, i) => (
-                <div
-                  key={i}
-                  className="w-1 rounded-full bg-primary transition-[height] duration-75 ease-out"
-                  style={{ height: `${Math.max(4, val * 24)}px` }}
-                />
-              ))}
-            </div>
+            {/* ACTION BAR */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px' }}>
+              {/* LEFT ACTIONS */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  type="button" 
+                  onClick={openImageChooser} 
+                  disabled={attachments.length >= maxAttachments}
+                  style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+                  title="Add Photo"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                </button>
+                <button 
+                  type="button"
+                  onClick={openFileChooser}
+                  disabled={attachments.length >= maxAttachments}
+                  style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', color: 'rgba(255,255,255,0.5)' }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+                  title="Add File"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </button>
+              </div>
 
-            <div
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} 
-              className={cn(
-                "absolute right-2 bottom-[6px] z-[10] transition-all duration-300 outline-none",
-                hasValue 
-                  ? "opacity-100 translate-y-0 scale-100" 
-                  : "opacity-40 grayscale cursor-not-allowed pointer-events-none scale-95"
+              {/* RIGHT ACTIONS */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ opacity: isTyping ? 1 : 0, transition: 'opacity 0.3s ease-in-out', pointerEvents: 'none' }}>
+                  <InputCursorLoader />
+                </div>
+                {isThinking ? (
+                  <button 
+                    type="button"
+                    onClick={onStop}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.12)', 
+                    borderRadius: '10px', 
+                    padding: '8px 12px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    border: '1px solid rgba(255,255,255,0.02)', 
+                    cursor: 'pointer', 
+                    color: '#fff',
+                    transition: 'all 0.2s'
+                  }}
+                  title="Stop generating"
+                >
+                  <SendLoader />
+                  <span style={{ fontSize: '13.5px', fontWeight: 500, marginLeft: '4px' }}>Stop</span>
+                </button>
+              ) : (
+                <button 
+                  type="button"
+                  onClick={hasValue ? handleSubmit : undefined}
+                  style={{ 
+                    background: hasValue ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)', 
+                    borderRadius: '10px', 
+                    padding: '8px 16px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    border: '1px solid rgba(255,255,255,0.02)', 
+                    cursor: hasValue ? 'pointer' : 'not-allowed', 
+                    color: hasValue ? '#fff' : 'rgba(255,255,255,0.4)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => { if (hasValue) e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
+                  onMouseOut={(e) => { if (hasValue) e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                >
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                   <span style={{ fontSize: '13.5px', fontWeight: 500 }}>Send</span>
+                </button>
               )}
-            >
-              <button
-                type="button"
-                onClick={hasValue ? handleSubmit : undefined}
-                className="flex size-10 items-center justify-center rounded-full bg-[var(--accent-color,#956afa)] text-white shadow-md transition-all duration-200 hover:scale-105 active:scale-95 outline-none"
-                aria-label="Send message"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-              </button>
+              </div>
             </div>
           </div>
         </div>

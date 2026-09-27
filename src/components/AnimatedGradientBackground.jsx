@@ -42,7 +42,7 @@ const BackgroundWrapper = styled.div`
       rgba(255, 107, 43, 0.4) 80%,
       transparent 100%
     );
-    background-size: 200% 200%;
+    background-size: 400% 400%;
     animation: ${breathe} 8s ease-in-out infinite, ${wave} 15s ease infinite;
     pointer-events: none;
     z-index: -1;

@@ -1,54 +1,55 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle, MoreVertical, Archive, Trash2, Edit2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from './firebaseConfig';
-import { loadSessionsFromFirestore, saveSessionToFirestore, deleteAllSessions, updateUserLastSeen } from './firestoreUtils';
+import { loadSessionsFromFirestore, saveSessionToFirestore, deleteAllSessions, updateUserLastSeen, deleteSession, moveSessionToDeleted, loadUserProfileData, saveUserProfileData, loadHealthData, saveHealthDataNode, deleteHealthDataNode } from './firestoreUtils';
 import { saveMemoryToPinecone, searchMemories } from './ragUtils';
-import Login from './Login';
 import AgenticLoadingUI from './components/AgenticLoadingUI';
 import DarkMidnightMeshBackground from './components/DarkMidnightMeshBackground';
 import DarkEmberBackground from './components/DarkEmberBackground';
+import Auralis from './components/ui/auralis';
 import { TextLoader } from './components/TextLoader';
 import GradientSendButton from './components/GradientSendButton';
 import { VoicePoweredOrb } from './components/VoicePoweredOrb';
 import { PromptInput } from './components/PromptInput';
 import LogicalLoader from './components/LogicalLoader';
+import Loader from './components/Loader';
 import AnimatedGradientBackground from './components/AnimatedGradientBackground';
 import './index.css';
 
 const AuraSystem = ({ isTyping, isThinking, hasMessages }) => {
   const showTypingPlasma = isTyping && !isThinking && !hasMessages;
   const showThinkingAura = isThinking;
-  const isIdle = hasMessages && !isThinking;
+  const isIdle = false;
 
   return (
     <div style={{ position: 'absolute', top: '-100px', left: '-100px', right: '-100px', bottom: '-100px', zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
       <motion.div className="plasma-container"
-        animate={{ opacity: showTypingPlasma ? 0.8 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.15 : 0.9 }}
+        animate={{ opacity: showTypingPlasma ? 1 : 0, y: showTypingPlasma ? -30 : 50, scale: showTypingPlasma ? 1.25 : 0.9 }}
         transition={{ duration: 1.5, ease: "easeInOut" }}>
-        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360], x: ['-2vw', '3vw', '-2vw'], y: ['0vh', '3vh', '0vh'], scale: [1, 1.1, 1] }} transition={{ duration: 12, ease: 'linear', repeat: Infinity }} />
-        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0], x: ['2vw', '-3vw', '2vw'], y: ['-2vh', '2vh', '-2vh'], scale: [1, 1.15, 1] }} transition={{ duration: 15, ease: 'linear', repeat: Infinity }} />
-        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360], x: ['-1vw', '4vw', '-1vw'], y: ['2vh', '-2vh', '2vh'], scale: [1, 1.2, 1] }} transition={{ duration: 10, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-1" animate={{ rotate: [0, 360], x: ['-2vw', '3vw', '-2vw'], y: ['0vh', '3vh', '0vh'], scale: [1, 1.2, 1] }} transition={{ duration: 12, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-2" animate={{ rotate: [360, 0], x: ['2vw', '-3vw', '2vw'], y: ['-2vh', '2vh', '-2vh'], scale: [1, 1.25, 1] }} transition={{ duration: 15, ease: 'linear', repeat: Infinity }} />
+        <motion.div className="plasma-blob-3" animate={{ rotate: [0, -360], x: ['-1vw', '4vw', '-1vw'], y: ['2vh', '-2vh', '2vh'], scale: [1, 1.3, 1] }} transition={{ duration: 10, ease: 'linear', repeat: Infinity }} />
       </motion.div>
 
-      <motion.div animate={{ opacity: showThinkingAura ? 0.6 : 0, y: showThinkingAura ? 0 : -50 }} transition={{ duration: 1.2, ease: "easeInOut" }}
-        style={{ position: 'absolute', top: '100px', left: '100px', right: '100px', height: '40vh', filter: 'blur(60px)', display: 'flex', justifyContent: 'center' }}>
-        <motion.div animate={{ x: ['-30vw', '30vw', '-30vw'], scale: [1, 1.2, 1] }} transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '40vw', height: '20vh', background: '#05D9E8', borderRadius: '50%', opacity: 0.8, marginTop: '-10vh' }} />
-        <motion.div animate={{ x: ['30vw', '-30vw', '30vw'], scale: [1.2, 1, 1.2] }} transition={{ duration: 5, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '50vw', height: '20vh', background: '#FF2A6D', borderRadius: '50%', opacity: 0.6, marginTop: '-5vh', position: 'absolute' }} />
+      <motion.div animate={{ opacity: showThinkingAura ? 1 : 0, y: showThinkingAura ? 0 : -50 }} transition={{ duration: 1.2, ease: "easeInOut" }}
+        style={{ position: 'absolute', top: '100px', left: '100px', right: '100px', height: '40vh', display: 'flex', justifyContent: 'center', willChange: 'opacity, transform', filter: 'blur(80px)' }}>
+        <motion.div animate={{ x: ['-30vw', '30vw', '-30vw'], scale: [1, 1.3, 1] }} transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '40vw', height: '20vh', background: '#05D9E8', borderRadius: '50%', opacity: 0.9, marginTop: '-10vh', willChange: 'transform' }} />
+        <motion.div animate={{ x: ['30vw', '-30vw', '30vw'], scale: [1.3, 1, 1.3] }} transition={{ duration: 5, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '50vw', height: '20vh', background: '#FF2A6D', borderRadius: '50%', opacity: 0.8, marginTop: '-5vh', position: 'absolute', willChange: 'transform' }} />
       </motion.div>
 
       <motion.div animate={{ opacity: isIdle ? 1 : 0 }} transition={{ duration: 3, ease: "easeInOut" }}
-        style={{ position: 'absolute', top: '100px', left: '100px', right: '100px', bottom: '100px', display: 'flex', justifyContent: 'space-between', filter: 'blur(90px)' }}>
-        <motion.div animate={{ opacity: [0.2, 0.4, 0.2], x: ['0vw', '5vw', '0vw'], y: ['0vh', '-5vh', '0vh'], scale: [1, 1.1, 1] }} transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '30vw', height: '50vh', background: '#4285F4', borderRadius: '50%', marginLeft: '-15vw', marginTop: '-10vh' }} />
-        <motion.div animate={{ opacity: [0.15, 0.3, 0.15], x: ['0vw', '-6vw', '0vw'], y: ['0vh', '4vh', '0vh'], scale: [1, 1.2, 1] }} transition={{ duration: 15, ease: "easeInOut", repeat: Infinity }}
-          style={{ width: '40vw', height: '40vh', background: '#9B72CB', borderRadius: '50%', marginRight: '-20vw', bottom: '-10vh', position: 'absolute', right: 0 }} />
+        style={{ position: 'absolute', top: '100px', left: '100px', right: '100px', bottom: '100px', display: 'flex', justifyContent: 'space-between', willChange: 'opacity', filter: 'blur(80px)', transform: 'translateZ(0)' }}>
+        <motion.div animate={{ opacity: [0.4, 0.7, 0.4], x: ['0vw', '5vw', '0vw'], y: ['0vh', '-5vh', '0vh'], scale: [1, 1.2, 1] }} transition={{ duration: 15, ease: "easeInOut", repeat: Infinity }}
+          style={{ width: '30vw', height: '50vh', background: '#9333ea', borderRadius: '50%', marginLeft: '-15vw', marginTop: '-10vh', willChange: 'transform, opacity', transform: 'translateZ(0)' }} />
+        <motion.div animate={{ opacity: [0.3, 0.6, 0.3], x: ['0vw', '-6vw', '0vw'], y: ['0vh', '4vh', '0vh'], scale: [1, 1.3, 1] }} transition={{ duration: 15, ease: "easeInOut", repeat: Infinity, delay: 7.5 }}
+          style={{ width: '40vw', height: '40vh', background: '#a855f7', borderRadius: '50%', marginRight: '-20vw', bottom: '-10vh', position: 'absolute', right: 0, willChange: 'transform, opacity', transform: 'translateZ(0)' }} />
       </motion.div>
     </div>
   );
@@ -87,12 +88,47 @@ export default function App() {
 
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  
+  // Option B: Guest Limit & Onboarding
+  const [guestMessageCount, setGuestMessageCount] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [onboardingData, setOnboardingData] = useState({ name: '', dob: '', diet: '', weightHeight: '', email: '', phone: '', healthInfo: '' });
+
   const [chatSessions, setChatSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [bgTheme, setBgTheme] = useState('midnight');
 
+  const [locationData, setLocationData] = useState(null);
+  const [realTimeClock, setRealTimeClock] = useState(new Date());
+
+  const [myData, setMyData] = useState({ name: '', dob: '', diet: '', weightHeight: '', email: '', phone: '' });
+  const [isEditingMyData, setIsEditingMyData] = useState(false);
+  const [healthData, setHealthData] = useState([]);
+  const [showAddHealthTextModal, setShowAddHealthTextModal] = useState(false);
+  const [newHealthText, setNewHealthText] = useState('');
+
   useEffect(() => {
-    setBgTheme(Math.random() < 0.5 ? 'midnight' : 'ember');
+    // Start real-time clock
+    const timer = setInterval(() => {
+      setRealTimeClock(new Date());
+    }, 1000);
+
+    // Fetch IP-based location data
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setLocationData(data);
+        }
+      })
+      .catch(err => console.error("Failed to fetch location", err));
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    setBgTheme('midnight');
   }, []);
 
   useEffect(() => {
@@ -101,11 +137,32 @@ export default function App() {
       setAuthLoading(false);
       return;
     }
+    
+    // Add Google sign-in handler
+    const handleGoogleSignIn = async () => {
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        setShowAuthModal(false);
+      } catch (error) {
+        console.error("Error signing in with Google:", error);
+      }
+    };
+    
+    const handleOnboardingSubmit = async (e) => {
+      e.preventDefault();
+      if (!user) return;
+      try {
+        await saveUserProfileData(user.uid, onboardingData);
+        setMyData(onboardingData);
+        setShowOnboardingModal(false);
+      } catch (err) {
+        console.error("Failed to save onboarding data", err);
+      }
+    };
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      // Force all users (including public Vercel visitors) to use the 'sahityaka' profile 
-      // so they can see all the migrated chats.
-      let activeUser = { uid: 'sahityaka', email: 'sahityaka@app.local' };
+      let activeUser = currentUser;
       
       if (activeUser) {
         // Track when Sahityaka opens the app
@@ -133,6 +190,20 @@ export default function App() {
             setActiveSessionId(newId);
             try { saveSessionToFirestore(activeUser.uid, newSession); } catch(e){}
           }
+          
+          try {
+            const profileData = await loadUserProfileData(activeUser.uid);
+            if (profileData && profileData.name) {
+              setMyData(profileData);
+            } else {
+              setShowOnboardingModal(true);
+            }
+            
+            const hData = await loadHealthData(activeUser.uid);
+            if (hData && hData.length > 0) setHealthData(hData);
+          } catch (e) {
+            console.error("Error loading user profile/health data", e);
+          }
         } catch (error) {
           console.error("Failed to load sessions:", error);
           const fallbackId = Math.random().toString(36).substring(2, 9);
@@ -148,6 +219,8 @@ export default function App() {
     return () => unsubscribe();
   }, []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isHoveringSidebar, setIsHoveringSidebar] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
@@ -164,19 +237,118 @@ export default function App() {
     };
   }, []);
 
+  // Briefly peek the sidebar on initial load to show users it's there
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    
+    const timer1 = setTimeout(() => {
+      if (isMobile) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsHoveringSidebar(true);
+      }
+    }, 800);
+    
+    const timer2 = setTimeout(() => {
+      if (isMobile) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsHoveringSidebar(false);
+      }
+    }, 2500); // Close after 1.7s
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
+
   const activeSession = chatSessions.find(s => s.id === activeSessionId) || chatSessions[0];
   const messages = activeSession ? activeSession.messages : [];
 
   const [input, setInput] = useState('');
+  const [placeholderDots, setPlaceholderDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderDots(prev => prev.length >= 3 ? '' : prev + '.');
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+  const [editingMessageIndex, setEditingMessageIndex] = useState(null);
+  const [editInput, setEditInput] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [showMoodPopup, setShowMoodPopup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [currentMoodContext, setCurrentMoodContext] = useState('');
   const [recoveryPlanContext, setRecoveryPlanContext] = useState('');
+  const [showChatMenuForId, setShowChatMenuForId] = useState(null);
+
+  const handleDeleteSession = async (e, sessionId) => {
+    e.stopPropagation();
+    const session = chatSessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    const updated = { ...session, deletedAt: Date.now(), updatedAt: Date.now() };
+    saveSessionToFirestore(user?.uid, updated);
+    setChatSessions(prev => prev.map(s => s.id === sessionId ? updated : s));
+    
+    if (activeSessionId === sessionId) {
+      const remaining = chatSessions.filter(s => s.id !== sessionId && !s.deletedAt && !s.isArchived);
+      setActiveSessionId(remaining[0]?.id || null);
+    }
+    setShowChatMenuForId(null);
+  };
+
+  const handleRestoreSession = async (session) => {
+    const updated = { ...session, deletedAt: null, updatedAt: Date.now() };
+    saveSessionToFirestore(user?.uid, updated);
+    setChatSessions(prev => prev.map(s => s.id === session.id ? updated : s));
+  };
+
+  useEffect(() => {
+    const checkExpiredSessions = async () => {
+      const now = Date.now();
+      const SEVENTY_TWO_HOURS = 72 * 60 * 60 * 1000;
+      const expiredSessions = chatSessions.filter(s => s.deletedAt && (now - s.deletedAt > SEVENTY_TWO_HOURS));
+      
+      let anyMoved = false;
+      for (const session of expiredSessions) {
+        if (user?.uid) {
+          await moveSessionToDeleted(user.uid, session);
+          anyMoved = true;
+        }
+      }
+      if (anyMoved) {
+        setChatSessions(prev => prev.filter(s => !(s.deletedAt && (now - s.deletedAt > SEVENTY_TWO_HOURS))));
+      }
+    };
+    if (chatSessions.length > 0 && user?.uid) {
+      checkExpiredSessions();
+    }
+  }, [chatSessions.length, user]);
+
+  const handleArchiveSession = async (e, session) => {
+    e.stopPropagation();
+    const updated = { ...session, isArchived: true, updatedAt: Date.now() };
+    saveSessionToFirestore(user?.uid, updated);
+    setChatSessions(prev => prev.map(s => s.id === session.id ? updated : s));
+    if (activeSessionId === session.id) {
+       const activeRemaining = chatSessions.filter(s => s.id !== session.id && !s.isArchived);
+       setActiveSessionId(activeRemaining[0]?.id || null);
+    }
+    setShowChatMenuForId(null);
+  };
+
+  const handleUnarchiveSession = async (session) => {
+    const updated = { ...session, isArchived: false, updatedAt: Date.now() };
+    saveSessionToFirestore(user?.uid, updated);
+    setChatSessions(prev => prev.map(s => s.id === session.id ? updated : s));
+  };
 
   const [activeSettingView, setActiveSettingView] = useState('menu');
   const [showFullScreenRecovery, setShowFullScreenRecovery] = useState(false);
@@ -236,8 +408,14 @@ export default function App() {
 
   const handleCopy = async (text, index) => {
     try {
+      let textToCopy = text;
+      const element = document.getElementById(`msg-content-${index}`);
+      if (element) {
+        textToCopy = element.innerText;
+      }
+      
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(textToCopy);
       } else {
         // Fallback for non-secure HTTP contexts (mobile local network)
         const textArea = document.createElement("textarea");
@@ -353,7 +531,12 @@ export default function App() {
   };
 
   const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current && chatContainerRef.current.parentElement) {
+      chatContainerRef.current.parentElement.scrollTo({
+        top: chatContainerRef.current.parentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
     setShowScrollArrow(false);
   };
 
@@ -407,6 +590,35 @@ export default function App() {
     }
   };
 
+  const handleVariantChange = (index, direction) => {
+     setChatSessions(prev => prev.map(session => {
+        if (session.id !== activeSessionId) return session;
+        const newMsgs = [...session.messages];
+        const modelMsg = { ...newMsgs[index] };
+        const userMsg = { ...newMsgs[index - 1] };
+        
+        let newVariant = (modelMsg.activeVariant || 0) + direction;
+        if (!modelMsg.variants || newVariant < 0 || newVariant >= modelMsg.variants.length) return session;
+        
+        modelMsg.activeVariant = newVariant;
+        modelMsg.content = modelMsg.variants[newVariant];
+        
+        if (userMsg.variants && newVariant < userMsg.variants.length) {
+          userMsg.activeVariant = newVariant;
+          userMsg.content = userMsg.variants[newVariant];
+        }
+        
+        newMsgs[index] = modelMsg;
+        newMsgs[index - 1] = userMsg;
+        
+        return { ...session, messages: newMsgs };
+     }));
+     // Note: We'd want to also persist this change, but for simple navigation we can just update local state,
+     // or trigger a save. Let's do a quick save.
+     const updatedSession = { ...chatSessions.find(s => s.id === activeSessionId), messages: [...messages] };
+     saveSessionToFirestore(user?.uid, updatedSession);
+  };
+
   const performTavilySearch = async (query) => {
     try {
       const res = await fetch('https://api.tavily.com/search', {
@@ -427,39 +639,79 @@ export default function App() {
     }
   };
 
-  const handleSend = async (overrideMsg = null, overrideAttachments = null) => {
-    const userMsg = typeof overrideMsg === 'string' ? overrideMsg : input;
+  const handleSend = async (overrideMsg = null, overrideAttachments = null, editIndex = null) => {
+    if (!user && guestMessageCount >= 1) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    if (!user) {
+      setGuestMessageCount(prev => prev + 1);
+    }
+    
+    const userMsgContent = typeof overrideMsg === 'string' ? overrideMsg : input;
     const finalAttachments = overrideAttachments || selectedImage;
-    if ((!userMsg.trim() && (!finalAttachments || finalAttachments.length === 0)) || isLoading) return;
+    if ((!userMsgContent.trim() && (!finalAttachments || finalAttachments.length === 0)) || isLoading) return;
 
     chatCountRef.current += 1;
-    if (typeof overrideMsg !== 'string') setInput('');
+    if (typeof overrideMsg !== 'string' && editIndex === null) setInput('');
     
     setSelectedImage(null);
 
     const attachmentsArray = Array.isArray(finalAttachments) ? finalAttachments : (finalAttachments ? [finalAttachments] : null);
-    const newMessages = [...messages, { role: 'user', content: userMsg, attachments: attachmentsArray }];
+    
+    let newMessages;
+    let newModelVariants = [];
+    let newModelActiveVariant = 0;
+    
+    if (editIndex !== null) {
+      let oldUserMsg = { ...messages[editIndex] };
+      let oldModelMsg = messages[editIndex + 1];
+      
+      let userVariants = oldUserMsg.variants || [oldUserMsg.content];
+      userVariants = [...userVariants, userMsgContent];
+      oldUserMsg.variants = userVariants;
+      oldUserMsg.activeVariant = userVariants.length - 1;
+      oldUserMsg.content = userMsgContent; 
+      
+      newMessages = [...messages.slice(0, editIndex), oldUserMsg];
+      
+      if (oldModelMsg) {
+         newModelVariants = oldModelMsg.variants || [oldModelMsg.content];
+         newModelActiveVariant = newModelVariants.length;
+         newModelVariants = [...newModelVariants, ""]; // placeholder
+      }
+      setEditingMessageIndex(null);
+      setEditInput('');
+    } else {
+      newMessages = [...messages, { role: 'user', content: userMsgContent, attachments: attachmentsArray }];
+    }
 
     let newTitle = activeSession.title;
-    if (newTitle === 'New Chat' && userMsg.trim().length > 0) {
-      newTitle = userMsg.substring(0, 30) + (userMsg.length > 30 ? '...' : '');
+    if (newTitle === 'New Chat' && userMsgContent.trim().length > 0) {
+      newTitle = userMsgContent.substring(0, 30) + (userMsgContent.length > 30 ? '...' : '');
     }
 
     const updatedSession = { id: activeSessionId, title: newTitle, messages: newMessages, updatedAt: Date.now() };
     setChatSessions(prev => prev.map(s => s.id === activeSessionId ? updatedSession : s));
-    saveSessionToFirestore(user.uid, updatedSession);
+    if (user) {
+      saveSessionToFirestore(user.uid, updatedSession);
+    } else {
+      saveSessionToFirestore("guest_user", updatedSession);
+    }
 
     // Save user message to AI's long-term memory
-    saveMemoryToPinecone(userMsg, 'user', activeSessionId);
+    saveMemoryToPinecone(userMsgContent, 'user', activeSessionId, user?.uid);
 
     setIsLoading(true);
     setIsThinking(true);
 
     let apiKey = defaultApiKey;
+    let fullReply = '';
 
     try {
       // Search Pinecone for relevant past memories
-      const pastMemories = await searchMemories(userMsg);
+      const pastMemories = await searchMemories(userMsgContent, user?.uid);
 
       // Reset abort tokens
       abortControllerRef.current = new AbortController();
@@ -474,7 +726,11 @@ export default function App() {
           messages: newMessages,
           userProfile: user,
           currentMoodContext: currentMoodContext || 'Normal',
-          pastMemories: pastMemories || []
+          myData: myData,
+          healthData: healthData,
+          pastMemories: pastMemories || [],
+          locationData: locationData,
+          currentTime: realTimeClock.toISOString()
         })
       });
 
@@ -488,8 +744,6 @@ export default function App() {
       // Start reading the text stream from Vercel AI SDK
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
-      
-      let fullReply = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -507,30 +761,84 @@ export default function App() {
         setChatSessions(prev => prev.map(s => s.id === activeSessionId ? fallbackSession : s));
       }
 
+      let extractedHealth = null;
+      let cleanedReply = fullReply;
+      const healthMatch = fullReply.match(/\[HEALTH_MEMORY:\s*(.*?)\]/);
+      if (healthMatch) {
+        extractedHealth = healthMatch[1];
+        cleanedReply = fullReply.replace(/\[HEALTH_MEMORY:\s*(.*?)\]/g, '').trim();
+      }
+
+      let finalModelMsg;
+      if (editIndex !== null) {
+        finalModelMsg = {
+          role: 'model',
+          content: cleanedReply,
+          isNew: true,
+          variants: newModelVariants,
+          activeVariant: newModelActiveVariant
+        };
+        finalModelMsg.variants[newModelActiveVariant] = cleanedReply;
+      } else {
+        finalModelMsg = { role: 'model', content: cleanedReply, isNew: true };
+      }
+
       // After streaming finishes completely, save to Firestore and update UI state
       const finalSession = { 
         id: activeSessionId, 
         title: updatedSession.title, 
-        messages: [...newMessages, { role: 'model', content: fullReply, isNew: true }], 
+        messages: [...newMessages, finalModelMsg], 
         updatedAt: Date.now() 
       };
       
       setChatSessions(prev => prev.map(s => s.id === activeSessionId ? finalSession : s));
       
-      saveSessionToFirestore(user.uid, finalSession);
-      saveMemoryToPinecone(fullReply, 'model', activeSessionId);
+      if (user) {
+        saveSessionToFirestore(user.uid, finalSession);
+        
+        if (extractedHealth) {
+          const newNode = {
+            id: Date.now().toString(),
+            date: new Date().toISOString(),
+            content: extractedHealth,
+            type: 'text'
+          };
+          saveHealthDataNode(user.uid, newNode);
+          setHealthData(prev => [...(prev||[]), newNode]);
+        }
+      } else {
+        saveSessionToFirestore("guest_user", finalSession);
+      }
+      saveMemoryToPinecone(cleanedReply, 'model', activeSessionId, user?.uid);
 
       setIsLoading(false);
-      if (chatEndRef.current) {
-        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-      // Trigger mood popup every 5 messages
-      if (chatCountRef.current >= 5) {
-        setTimeout(() => setShowMoodPopup(true), 2000);
-      }
+      scrollToBottom();
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log("Generation aborted by user");
+        if (fullReply.trim() !== '') {
+          let finalModelMsg;
+          if (editIndex !== null) {
+            finalModelMsg = {
+              role: 'model',
+              content: fullReply,
+              isNew: true,
+              variants: newModelVariants,
+              activeVariant: newModelActiveVariant
+            };
+            finalModelMsg.variants[newModelActiveVariant] = fullReply;
+          } else {
+            finalModelMsg = { role: 'model', content: fullReply, isNew: true };
+          }
+          const finalSession = { id: activeSessionId, title: updatedSession.title, messages: [...newMessages, finalModelMsg], updatedAt: Date.now() };
+          setChatSessions(prev => prev.map(s => s.id === activeSessionId ? finalSession : s));
+          if (user) {
+            saveSessionToFirestore(user.uid, finalSession);
+          } else {
+            saveSessionToFirestore("guest_user", finalSession);
+          }
+          saveMemoryToPinecone(fullReply, 'model', activeSessionId, user?.uid);
+        }
         return;
       }
       console.error(error);
@@ -542,13 +850,16 @@ export default function App() {
           ? { ...s, messages: [...s.messages, { role: 'model', content: fallbackMsg }], updatedAt: Date.now() }
           : s
       ));
+      const fallbackUpdate = { 
+        id: activeSessionId, 
+        title: newTitle, 
+        messages: [...newMessages, { role: 'model', content: fallbackMsg }], 
+        updatedAt: Date.now() 
+      };
       if (user) {
-        saveSessionToFirestore(user.uid, { 
-          id: activeSessionId, 
-          title: newTitle, 
-          messages: [...newMessages, { role: 'model', content: fallbackMsg }], 
-          updatedAt: Date.now() 
-        });
+        saveSessionToFirestore(user.uid, fallbackUpdate);
+      } else {
+        saveSessionToFirestore("guest_user", fallbackUpdate);
       }
     } finally {
       setIsLoading(false);
@@ -603,29 +914,13 @@ export default function App() {
         </div>
       )}
       <div style={{ position: 'relative', width: '100%', maxWidth: '720px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', zIndex: 10 }}>
-        <AnimatePresence>
-          {isLoading && (
-            <motion.button
-              initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              onClick={handleStop}
-              style={{
-                background: 'var(--btn-bg, #222)', color: 'var(--text-primary, #fff)',
-                border: '1px solid var(--btn-bg-hover, #444)', padding: '10px 20px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px',
-                cursor: 'pointer', transition: 'all 0.3s', fontSize: '14px', fontWeight: 500, boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-              }}
-              title="Stop generating"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-              Stop generating
-            </motion.button>
-          )}
-        </AnimatePresence>
-        <div style={{ width: '100%', pointerEvents: isLoading ? 'none' : 'auto', opacity: isLoading ? 0.7 : 1, transition: 'opacity 0.3s' }}>
+        <div style={{ width: '100%', pointerEvents: 'auto', opacity: isLoading ? 0.8 : 1, transition: 'opacity 0.3s' }}>
           <PromptInput
             ref={inputRef}
             value={input}
             onChange={setInput}
+            isThinking={isThinking || isLoading}
+            onStop={handleStop}
             onSubmit={async (val, { model, effort, attachments }) => {
               if (attachments && attachments.length > 0) {
                  const processedAttachments = await Promise.all(attachments.map(file => {
@@ -643,20 +938,14 @@ export default function App() {
                  handleSend(val);
               }
             }}
-            placeholder="Ask S anything..."
+            placeholder={`Ask S.Ai a question${placeholderDots}`}
           />
         </div>
       </div>
     </div>
   );
 
-  if (authLoading) {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid var(--glass-border)', borderTopColor: 'var(--accent-color)', animation: 'spin 1s linear infinite' }} />
-      </div>
-    );
-  }
+
 
   // Login screen bypassed
   // if (!user) {
@@ -680,39 +969,121 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {bgTheme === 'midnight' ? <DarkMidnightMeshBackground /> : <DarkEmberBackground />}
+      <Auralis speed={0.15} grain={0.2} />
       {/* <AgenticLoadingUI isThinking={isThinking} /> */ }
 
       <AuraSystem isTyping={isFocused || input.trim() !== ''} isThinking={isThinking || isLoading} hasMessages={messages.length > 0} />
 
-      {/* Left Navigation Rail */}
-      <nav className="left-nav-rail" style={{ width: '64px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', zIndex: 10, background: 'transparent' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-          {/* Logo */}
-          <div style={{ padding: '8px' }}>
-            <Sparkles size={24} color="url(#gemini-grad)" style={{ display: 'block' }} />
-          </div>
-          {/* New Chat */}
-          <button onClick={createNewChat} className="icon-btn" style={{ width: '40px', height: '40px', background: 'var(--btn-bg)' }} title="New Chat">
-            <Plus size={20} />
-          </button>
-          {/* History Toggle */}
-          <button onClick={() => setIsSidebarOpen(true)} className="icon-btn" style={{ width: '40px', height: '40px' }} title="History">
-            <MessageSquare size={20} />
-          </button>
-        </div>
+      {/* Desktop Left Rail - Expands on hover */}
+      <nav 
+        className="left-nav-rail hidden md:flex" 
+        style={{ 
+          width: (isHoveringSidebar || isSidebarPinned) ? '260px' : '64px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'flex-start',
+          justifyContent: 'space-between', 
+          padding: '16px 0', 
+          zIndex: 50, 
+          background: (isHoveringSidebar || isSidebarPinned) ? 'rgba(10,10,10,0.95)' : 'transparent',
+          backdropFilter: (isHoveringSidebar || isSidebarPinned) ? 'blur(16px)' : 'none',
+          borderRight: (isHoveringSidebar || isSidebarPinned) ? '1px solid rgba(255,255,255,0.05)' : 'none',
+          boxShadow: (isHoveringSidebar || isSidebarPinned) ? '4px 0 24px rgba(0,0,0,0.5)' : 'none',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          overflow: 'hidden',
+          position: 'fixed',
+          top: 0, left: 0, bottom: 0
+        }}
+        onMouseEnter={() => setIsHoveringSidebar(true)}
+        onMouseLeave={() => setIsHoveringSidebar(false)}
+      >
+          {/* Top Icons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', padding: '0 12px', flex: 1, overflow: 'hidden' }}>
+            {/* Hamburger (Always visible) */}
+            <button className="icon-btn" style={{ width: '40px', height: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }} onClick={() => setIsSidebarPinned(!isSidebarPinned)}>
+               <Menu size={20} />
+            </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-          {/* Settings */}
-          <button onClick={() => setShowSettings(true)} className="icon-btn" style={{ width: '40px', height: '40px' }} title="Settings">
-            <Settings size={20} />
-          </button>
-        </div>
+            {/* Hidden items that show on hover */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', opacity: (isHoveringSidebar || isSidebarPinned) ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: (isHoveringSidebar || isSidebarPinned) ? 'auto' : 'none', overflow: 'hidden', whiteSpace: 'nowrap', flex: 1 }}>
+              <button onClick={createNewChat} className="icon-btn" style={{ width: '100%', height: '40px', background: 'var(--btn-bg)', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', justifyContent: 'flex-start', borderRadius: '12px' }}>
+                <Plus size={20} style={{ flexShrink: 0 }} />
+                <span>New Chat</span>
+              </button>
+              
+              <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px', marginTop: '8px', padding: '0 16px' }}>History</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1, paddingRight: '4px' }} className="prompt-scrollbar">
+                {user ? (
+                  chatSessions
+                    .filter(session => !session.isArchived && !session.deletedAt && session.messages.length > 0)
+                    .sort((a, b) => b.updatedAt - a.updatedAt)
+                    .map(session => (
+                      <div key={session.id} style={{ position: 'relative' }} onMouseLeave={() => setShowChatMenuForId(null)}>
+                        <button
+                          onClick={() => { setActiveSessionId(session.id); setIsHoveringSidebar(false); }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', borderRadius: '12px',
+                            background: activeSessionId === session.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--text-primary)', transition: 'background 0.2s', width: '100%', flexShrink: 0
+                          }}
+                          onMouseOver={(e) => { if(activeSessionId !== session.id) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                          onMouseOut={(e) => { if(activeSessionId !== session.id) e.currentTarget.style.background = 'transparent' }}
+                        >
+                          <MessageSquare size={18} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+                          <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>{session.title}</span>
+                          <div onClick={(e) => { e.stopPropagation(); setShowChatMenuForId(showChatMenuForId === session.id ? null : session.id); }} style={{ padding: '4px', borderRadius: '4px', background: 'transparent' }} className="hover:bg-white/10 transition-colors">
+                            <MoreVertical size={16} color="var(--text-secondary)" />
+                          </div>
+                        </button>
+                        {showChatMenuForId === session.id && (
+                          <div style={{ position: 'absolute', right: '40px', top: '10px', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '4px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+                            <button onClick={(e) => handleArchiveSession(e, session)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '4px', textAlign: 'left' }} className="hover:bg-white/10">
+                              <Archive size={14} /> <span style={{fontSize: '0.85rem'}}>Archive</span>
+                            </button>
+                            <button onClick={(e) => handleDeleteSession(e, session.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', color: '#ff4b4b', cursor: 'pointer', borderRadius: '4px', textAlign: 'left' }} className="hover:bg-white/10">
+                              <Trash2 size={14} /> <span style={{fontSize: '0.85rem'}}>Delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                ) : (
+                  <div style={{ padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '50%' }}>
+                      <Lock size={24} color="var(--text-secondary)" />
+                    </div>
+                    <span style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 500 }}>Unlock History</span>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'normal', lineHeight: '1.4' }}>Login to view and manage your chat history.</span>
+                    <button onClick={() => setShowAuthModal(true)} style={{ marginTop: '8px', padding: '8px 16px', background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer' }}>
+                      Login Now
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', padding: '0 12px', opacity: (isHoveringSidebar || isSidebarPinned) ? 1 : 0, transition: 'opacity 0.2s', pointerEvents: (isHoveringSidebar || isSidebarPinned) ? 'auto' : 'none', overflow: 'hidden', whiteSpace: 'nowrap', borderTop: (isHoveringSidebar || isSidebarPinned) ? '1px solid rgba(255,255,255,0.05)' : 'none', paddingTop: (isHoveringSidebar || isSidebarPinned) ? '16px' : '0' }}>
+            {user ? (
+              <button onClick={() => setShowSettings(true)} className="icon-btn" style={{ width: '100%', height: '40px', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', justifyContent: 'flex-start', borderRadius: '12px' }}>
+                <Settings size={20} style={{ flexShrink: 0 }} />
+                <span>Settings</span>
+              </button>
+            ) : (
+              <button onClick={() => setShowAuthModal(true)} className="icon-btn" style={{ width: '100%', height: '40px', display: 'flex', alignItems: 'center', gap: '12px', padding: '0 16px', justifyContent: 'flex-start', borderRadius: '12px' }}>
+                <LogIn size={20} style={{ flexShrink: 0 }} />
+                <span>Login or Register</span>
+              </button>
+            )}
+          </div>
       </nav>
+      {/* Spacer so main content doesn't go under fixed nav */}
+      <div style={{ width: '64px', flexShrink: 0 }} className="hidden md:block" />
 
       {/* Sidebar Drawer */}
-      <AnimatePresence>
-        {isSidebarOpen && (
+      <div className="md:hidden">
+        <AnimatePresence>
+          {isSidebarOpen && (
           <>
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -745,42 +1116,85 @@ export default function App() {
                 <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '1px', marginBottom: '12px', marginLeft: '4px' }}>History</h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {chatSessions
-                    .filter(session => session.messages.length > 0 || session.id === activeSessionId)
-                    .sort((a, b) => b.updatedAt - a.updatedAt)
-                    .map(session => (
-                      <button
-                        key={session.id}
-                        onClick={() => { setActiveSessionId(session.id); setIsSidebarOpen(false); }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
-                          background: activeSessionId === session.id ? 'rgba(0,0,0,0.05)' : 'transparent',
-                          border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--text-primary)', transition: 'background 0.2s', width: '100%'
-                        }}
-                      >
-                        <MessageSquare size={18} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
-                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>{session.title}</span>
+                  {user ? (
+                    chatSessions
+                      .filter(session => !session.isArchived && !session.deletedAt && session.messages.length > 0)
+                      .sort((a, b) => b.updatedAt - a.updatedAt)
+                      .map(session => (
+                        <div key={session.id} style={{ position: 'relative' }} onMouseLeave={() => setShowChatMenuForId(null)}>
+                          <button
+                            onClick={() => { setActiveSessionId(session.id); setIsSidebarOpen(false); }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px',
+                              background: activeSessionId === session.id ? 'rgba(255,255,255,0.05)' : 'transparent',
+                              border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--text-primary)', transition: 'background 0.2s', width: '100%'
+                            }}
+                          >
+                            <MessageSquare size={18} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+                            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.95rem' }}>{session.title}</span>
+                            <div onClick={(e) => { e.stopPropagation(); setShowChatMenuForId(showChatMenuForId === session.id ? null : session.id); }} style={{ padding: '4px', borderRadius: '4px', background: 'transparent' }} className="hover:bg-white/10 transition-colors">
+                              <MoreVertical size={16} color="var(--text-secondary)" />
+                            </div>
+                          </button>
+                          {showChatMenuForId === session.id && (
+                            <div style={{ position: 'absolute', right: '40px', top: '10px', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '4px', zIndex: 10, display: 'flex', flexDirection: 'column', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+                              <button onClick={(e) => handleArchiveSession(e, session)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '4px', textAlign: 'left' }} className="hover:bg-white/10">
+                                <Archive size={14} /> <span style={{fontSize: '0.85rem'}}>Archive</span>
+                              </button>
+                              <button onClick={(e) => handleDeleteSession(e, session.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'transparent', border: 'none', color: '#ff4b4b', cursor: 'pointer', borderRadius: '4px', textAlign: 'left' }} className="hover:bg-white/10">
+                                <Trash2 size={14} /> <span style={{fontSize: '0.85rem'}}>Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                  ) : (
+                    <div style={{ padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '50%' }}>
+                        <Lock size={24} color="var(--text-secondary)" />
+                      </div>
+                      <span style={{ color: 'var(--text-primary)', fontSize: '0.95rem', fontWeight: 500 }}>Unlock History</span>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'normal', lineHeight: '1.4' }}>Login to view and manage your chat history.</span>
+                      <button onClick={() => { setIsSidebarOpen(false); setShowAuthModal(true); }} style={{ marginTop: '8px', padding: '8px 16px', background: 'var(--accent-color)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 500, cursor: 'pointer' }}>
+                        Login Now
                       </button>
-                    ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div style={{ padding: '20px', borderTop: '1px solid var(--glass-border)' }}>
-                <button
-                  onClick={() => { setShowSettings(true); setIsSidebarOpen(false); }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
-                >
-                  <Settings size={20} color="var(--text-secondary)" />
-                  <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>Settings</span>
-                </button>
+                {user ? (
+                  <button
+                    onClick={() => { setShowSettings(true); setIsSidebarOpen(false); }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
+                  >
+                    <Settings size={20} color="var(--text-secondary)" />
+                    <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>Settings</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setShowAuthModal(true); setIsSidebarOpen(false); }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '12px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}
+                  >
+                    <LogIn size={20} color="var(--text-secondary)" />
+                    <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>Login or Register</span>
+                  </button>
+                )}
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+      </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+      <div 
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
+        onClick={() => {
+          if (isSidebarPinned) setIsSidebarPinned(false);
+        }}
+      >
 
         {/* Mobile Header */}
         <div className="mobile-header">
@@ -792,18 +1206,76 @@ export default function App() {
 
         {messages.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div style={{ marginBottom: '24px' }}>
-              <Sparkles size={48} color="url(#gemini-grad)" />
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', transform: 'translateY(-20px)' }}>
+              {renderInputArea()}
             </div>
-            <h1 className="gemini-greeting-text gemini-gradient-text">
-              {randomGreeting}
-            </h1>
-            {renderInputArea()}
+            
+            {/* Quick Action Chips */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '16px', opacity: 0, animation: 'fadeInUp 0.8s ease-out 0.2s forwards' }}>
+              <style>{`
+                @keyframes fadeInUp {
+                  from { opacity: 0; transform: translateY(10px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+              `}</style>
+              {[
+                { 
+                  icon: '🩺', 
+                  text: 'Check Symptoms', 
+                  prompt: 'I am experiencing some symptoms and need your help. Please act as a medical assistant and ask me questions one by one about how I am feeling, when it started, and my medical history before giving any suggestions.' 
+                },
+                { 
+                  icon: '💊', 
+                  text: 'Medication Info', 
+                  prompt: 'I need information about a medication. Please ask me the name of the medicine, my dosage, and if I have any specific concerns (like side effects or interactions) before providing the details.' 
+                },
+                { 
+                  icon: '🥗', 
+                  text: 'Diet Plan', 
+                  prompt: 'I want a personalized diet plan. Please act as a nutritionist and ask me step-by-step about my goals (e.g., weight loss, muscle gain), medical conditions (like IBS or diabetes), and food allergies before creating a routine.' 
+                },
+                { 
+                  icon: '🧘‍♀️', 
+                  text: 'Mental Wellness', 
+                  prompt: 'I am looking for some mental wellness and stress relief advice. Please ask me how I am feeling today and what might be bothering me so you can suggest the right breathing exercises or routines.' 
+                }
+              ].map((chip, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setInput(chip.prompt)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 18px', borderRadius: '100px',
+                    background: 'rgba(0,0,0,0.6)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    color: 'rgba(255,255,255,0.6)',
+                    fontSize: '13px', fontWeight: 500,
+                    cursor: 'pointer', transition: 'all 0.2s',
+                    backdropFilter: 'blur(64px)'
+                  }}
+                  onMouseOver={(e) => { 
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; 
+                    e.currentTarget.style.color = '#fff'; 
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseOut={(e) => { 
+                    e.currentTarget.style.background = 'rgba(0,0,0,0.6)'; 
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; 
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <span style={{ fontSize: '15px' }}>{chip.icon}</span>
+                  {chip.text}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <>
-            <div onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', display: 'flex', justifyContent: 'center' }}>
-              <div ref={chatContainerRef} style={{ width: '100%', maxWidth: '800px', padding: '80px 20px 10px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', display: 'block', width: '100%' }}>
+              <div ref={chatContainerRef} style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '80px 20px 10px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 {messages.map((msg, i) => (
                   <div 
                     key={i} 
@@ -814,8 +1286,14 @@ export default function App() {
                   >
                     <div style={{ display: 'flex', gap: '12px' }}>
                       {msg.role === 'model' && (
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(74deg, #4285F4 0%, #9B72CB 46%, #D96570 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Sparkles size={16} color="#ffffff" />
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(10, 10, 10, 0.8)', border: '1px solid rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px rgba(5, 217, 232, 0.2)' }}>
+                          <motion.span 
+                            animate={{ filter: ['hue-rotate(0deg)', 'hue-rotate(360deg)'] }}
+                            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+                            style={{ background: 'linear-gradient(135deg, #05D9E8 0%, #FF2A6D 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.5px' }}
+                          >
+                            S
+                          </motion.span>
                         </div>
                       )}
 
@@ -826,22 +1304,44 @@ export default function App() {
                         borderRadius: msg.role === 'user' ? '24px' : '0',
                       }}>
                         {msg.role === 'user' ? (
-                          <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
-                            {msg.attachments && msg.attachments.map((att, idx) => {
-                              if (att.mimeType?.startsWith('image/')) {
-                                return <img key={idx} src={att.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: '8px', display: 'block' }} />;
-                              }
-                              return (
-                                <div key={idx} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', marginBottom: '8px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-                                  📄 <span>{att.name || 'Document'}</span>
+                          <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', width: '100%' }}>
+                            {editingMessageIndex === i ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '250px' }}>
+                                <textarea 
+                                  value={editInput}
+                                  onChange={(e) => setEditInput(e.target.value)}
+                                  onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }}
+                                  style={{ width: '100%', minHeight: '80px', padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: '0.95rem', resize: 'none', overflow: 'hidden' }}
+                                  autoFocus
+                                />
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                  <button onClick={(e) => { e.stopPropagation(); setEditingMessageIndex(null); }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancel</button>
+                                  <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (editInput.trim() === msg.content) { setEditingMessageIndex(null); return; }
+                                    handleSend(editInput, null, i);
+                                  }} style={{ padding: '6px 12px', borderRadius: '8px', background: 'var(--accent-color)', border: 'none', color: '#fff', cursor: 'pointer' }}>Save & Submit</button>
                                 </div>
-                              );
-                            })}
-                            {msg.image && <img src={msg.image.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: msg.content ? '8px' : '0' }} />}
-                            {msg.content}
+                              </div>
+                            ) : (
+                              <>
+                                {msg.attachments && msg.attachments.map((att, idx) => {
+                                  if (att.mimeType?.startsWith('image/')) {
+                                    return <img key={idx} src={att.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: '8px', display: 'block' }} />;
+                                  }
+                                  return (
+                                    <div key={idx} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', marginBottom: '8px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
+                                      📄 <span>{att.name || 'Document'}</span>
+                                    </div>
+                                  );
+                                })}
+                                {msg.image && <img src={msg.image.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: msg.content ? '8px' : '0' }} />}
+                                {msg.content}
+                              </>
+                            )}
                           </div>
                         ) : (
-                          <div className="markdown-body" style={{ position: 'relative' }}>
+                          <div id={`msg-content-${i}`} className="markdown-body" style={{ position: 'relative' }}>
                             <TypewriterMarkdown content={renderMessageContent(msg.content)} isNew={msg.isNew} />
                           </div>
                         )}
@@ -859,6 +1359,30 @@ export default function App() {
                       transition: 'opacity 0.2s',
                       height: '24px' // Pre-allocate space to avoid layout jump
                     }}>
+                      {msg.variants && msg.variants.length > 1 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '8px', color: 'var(--text-secondary)' }}>
+                          <button disabled={msg.activeVariant === 0} onClick={(e) => { e.stopPropagation(); handleVariantChange(i, -1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: msg.activeVariant === 0 ? 'rgba(255,255,255,0.2)' : 'inherit', display: 'flex', alignItems: 'center' }}><ChevronLeft size={16} /></button>
+                          <span style={{ fontSize: '0.8rem', userSelect: 'none' }}>{(msg.activeVariant || 0) + 1} / {msg.variants.length}</span>
+                          <button disabled={msg.activeVariant === msg.variants.length - 1} onClick={(e) => { e.stopPropagation(); handleVariantChange(i, 1); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: msg.activeVariant === msg.variants.length - 1 ? 'rgba(255,255,255,0.2)' : 'inherit', display: 'flex', alignItems: 'center' }}><ChevronRight size={16} /></button>
+                        </div>
+                      )}
+                      
+                      {msg.role === 'user' && !isLoading && !isThinking && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingMessageIndex(i); setEditInput(msg.content); }}
+                          style={{
+                            background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', marginRight: '4px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.6,
+                            transition: 'opacity 0.2s', color: 'var(--text-secondary)'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                          onMouseOut={(e) => e.currentTarget.style.opacity = 0.6}
+                          title="Edit prompt"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                      )}
+
                       <button
                         onClick={(e) => { e.stopPropagation(); handleCopy(msg.content, i); }}
                         style={{
@@ -880,16 +1404,23 @@ export default function App() {
                     </div>
                   </div>
                 ))}
+                
+                {/* Optimistic "Thinking" AI Message Bubble */}
                 {isThinking && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '10px' }}>
-                    <LogicalLoader isThinking={isThinking} query={messages.length > 0 ? messages[messages.length - 1].content : ""} />
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-start', maxWidth: '85%' }}
+                  >
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <div style={{ background: 'transparent', padding: '4px 0', borderRadius: '0' }}>
+                        <Loader />
+                      </div>
+                    </div>
                   </div>
                 )}
                 <div ref={chatEndRef} style={{ height: '1px', flexShrink: 0 }} />
               </div>
             </div>
 
-            {/* Scroll to bottom arrow */}
             <AnimatePresence>
               {showScrollArrow && (
                 <motion.button
@@ -901,39 +1432,16 @@ export default function App() {
                 </motion.button>
               )}
             </AnimatePresence>
-
-            {/* Input Area (Bottom) */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 24px', zIndex: 20 }}>
-              {renderInputArea()}
-            </div>
           </>
         )}
-      </div>
 
-      {/* Mood Popup Modal */}
-      <AnimatePresence>
-        {showMoodPopup && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-              className="base-panel" style={{ padding: '30px', borderRadius: '30px', textAlign: 'center', maxWidth: '320px', width: '90%', boxShadow: 'var(--subtle-shadow)' }}
-            >
-              <h3 style={{ marginBottom: '10px', fontSize: '1.2rem', color: 'var(--text-primary)' }}>How are you feeling right now?</h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>Let S know so I can help you better.</p>
-
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                <button onClick={() => handleMoodSelect('In severe pain')} className="emoji-btn" title="Severe Pain">😫</button>
-                <button onClick={() => handleMoodSelect('Anxious or stressed')} className="emoji-btn" title="Anxious">😰</button>
-                <button onClick={() => handleMoodSelect('Okay, just need to talk')} className="emoji-btn" title="Okay">☕</button>
-                <button onClick={() => handleMoodSelect('Feeling better!')} className="emoji-btn" title="Good">✨</button>
-              </div>
-            </motion.div>
-          </motion.div>
+        {/* Input Area (Bottom) - Anchored during chat */}
+        {messages.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 24px', zIndex: 20 }}>
+            {renderInputArea()}
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
       {/* Settings Modal */}
       <AnimatePresence>
@@ -943,160 +1451,293 @@ export default function App() {
             style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-              className="base-panel" style={{ padding: '30px', borderRadius: '24px', maxWidth: '400px', width: '90%', boxShadow: 'var(--subtle-shadow)' }}
+              initial={{ scale: 0.7, y: 100, opacity: 0 }} 
+              animate={{ scale: 1, y: 0, opacity: 1 }} 
+              exit={{ scale: 0.8, y: 50, opacity: 0 }} 
+              transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+              style={{ padding: 0, borderRadius: '24px', maxWidth: '1200px', width: '90vw', height: '85vh', minHeight: '600px', maxHeight: '900px', position: 'relative', display: 'flex', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', background: 'rgba(15,15,15,0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
-              {activeSettingView === 'menu' && (
-                <>
-                  <h3 style={{ marginBottom: '16px', fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Settings size={20} /> Settings
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px', marginTop: '16px' }}>
-                    {['Appearance', 'Theme', 'My Data', 'My Health Data'].map(opt => {
-                      const isDisabled = opt === 'My Data' || opt === 'My Health Data';
-                      return (
-                        <button
-                          key={opt}
-                          onClick={() => !isDisabled && setActiveSettingView(opt.toLowerCase().replace(/ /g, ''))}
-                          disabled={isDisabled}
-                          style={{
-                            padding: '16px', borderRadius: '14px', border: 'none',
-                            background: 'var(--btn-bg)', color: 'var(--text-primary)',
-                            textAlign: 'left', cursor: isDisabled ? 'not-allowed' : 'pointer', fontSize: '1rem',
-                            fontWeight: 500, transition: 'background 0.2s',
-                            opacity: isDisabled ? 0.4 : 1
-                          }}
-                          onMouseOver={(e) => { if (!isDisabled) e.target.style.background = 'var(--btn-bg-hover)' }}
-                          onMouseOut={(e) => { if (!isDisabled) e.target.style.background = 'var(--btn-bg)' }}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: '20px' }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                      <strong>S</strong> is powered by <strong>BuddyLLM</strong>
-                    </p>
-                    <button
-                      onClick={async () => {
-                        if (window.confirm("Are you sure you want to delete ALL your chat history? This cannot be undone.")) {
-                          await deleteAllSessions(user.uid);
-                          setChatSessions([{ id: generateId(), title: 'New Chat', messages: [], updatedAt: Date.now() }]);
-                          setActiveSessionId(chatSessions[0]?.id);
-                          setShowSettings(false);
-                        }
-                      }}
-                      style={{ width: '100%', padding: '12px', borderRadius: '14px', border: 'none', background: 'rgba(255, 75, 75, 0.1)', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b' }}
-                    >
-                      Clear All My Chats
-                    </button>
-                    <button
-                      onClick={() => setShowSettings(false)}
-                      style={{ width: '100%', padding: '12px', borderRadius: '14px', border: 'none', background: 'var(--btn-bg-hover)', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)' }}
-                    >
-                      Close
-                    </button>
-                    <button
-                      onClick={() => signOut(auth)}
-                      style={{ width: '100%', padding: '12px', borderRadius: '14px', border: '1px solid rgba(255, 75, 75, 0.3)', background: 'transparent', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b', transition: 'all 0.2s' }}
-                    >
-                      Log Out
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {activeSettingView !== 'menu' && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                    <button
-                      onClick={() => setActiveSettingView('menu')}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
-                    >
-                      <ChevronDown size={24} style={{ transform: 'rotate(90deg)' }} />
-                    </button>
-                    <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize' }}>
-                      {activeSettingView === 'mydata' ? 'My Data' : activeSettingView === 'myhealthdata' ? 'My Health Data' : activeSettingView}
-                    </h3>
-                  </div>
-
-                  {activeSettingView === 'appearance' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {['light', 'dark', 'default'].map(theme => (
-                        <button
-                          key={theme}
-                          onClick={() => setThemePreference(theme)}
-                          style={{
-                            padding: '14px', borderRadius: '12px', border: themePreference === theme ? '2px solid var(--accent-color)' : '1px solid rgba(0,0,0,0.1)',
-                            background: themePreference === theme ? 'rgba(0,113,227,0.05)' : 'transparent',
-                            color: 'var(--text-primary)', cursor: 'pointer', fontSize: '1rem', textTransform: 'capitalize', textAlign: 'left', fontWeight: 500
-                          }}
-                        >
-                          {theme} Mode
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {activeSettingView === 'theme' && (
-                    <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                      <Sparkles size={32} style={{ opacity: 0.5, marginBottom: '16px' }} />
-                      <p style={{ fontSize: '1.1rem', fontWeight: 500 }}>Coming Soon</p>
-                    </div>
-                  )}
-
-                  {activeSettingView === 'mydata' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.95rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>Name</span>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Sahityaka Singh</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>Date of Birth</span>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>18 Sept 2006</span>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>Diet</span>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>Vegetarian</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>Weight</span>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>~50-59 kg</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeSettingView === 'myhealthdata' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
-                        Attached Documents
-                      </p>
-                      <div
-                        onClick={() => setShowFullScreenRecovery(true)}
+              <button 
+                onClick={() => setShowSettings(false)}
+                style={{ position: 'absolute', top: '24px', right: '24px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', zIndex: 10, transition: 'all 0.2s' }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'white'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              >
+                <X size={18} />
+              </button>
+              {/* Left Sidebar Pane */}
+              <div style={{ width: '250px', background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.08)', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ marginBottom: '24px', fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Settings size={20} /> Settings
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                  {['ChatBin', 'Archived Chats', 'My Data', 'My Health Data', 'Region'].map(opt => {
+                    const optKey = opt.toLowerCase().replace(/ /g, '');
+                    const isSelected = activeSettingView === optKey;
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() => setActiveSettingView(optKey)}
                         style={{
-                          display: 'flex', alignItems: 'center', gap: '16px', padding: '16px',
-                          background: 'var(--btn-bg)', borderRadius: '16px', cursor: 'pointer',
-                          transition: 'background 0.2s', border: '1px solid rgba(0,0,0,0.05)'
+                          padding: '12px 16px', borderRadius: '12px', border: 'none',
+                          background: isSelected ? 'rgba(255,255,255,0.1)' : 'transparent', 
+                          color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                          textAlign: 'left', cursor: 'pointer', fontSize: '0.95rem',
+                          fontWeight: 500, transition: 'all 0.2s',
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'var(--btn-bg-hover)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'var(--btn-bg)'}
+                        onMouseOver={(e) => { if (!isSelected) e.target.style.background = 'rgba(255,255,255,0.05)' }}
+                        onMouseOut={(e) => { if (!isSelected) e.target.style.background = 'transparent' }}
                       >
-                        <div style={{ background: 'rgba(0,113,227,0.1)', color: 'var(--accent-color)', padding: '12px', borderRadius: '12px' }}>
-                          <FileText size={24} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <h4 style={{ margin: '0 0 4px 0', color: 'var(--text-primary)', fontSize: '1rem' }}>Health Recovery Plan</h4>
-                          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>HTML Document • Comprehensive Analysis</p>
-                        </div>
-                        <ChevronRight size={20} color="var(--text-secondary)" />
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
+                  <button onClick={() => signOut(auth)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 75, 75, 0.3)', background: 'transparent', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b', transition: 'all 0.2s' }} onMouseOver={(e)=>e.target.style.background='rgba(255,75,75,0.1)'} onMouseOut={(e)=>e.target.style.background='transparent'}>Log Out</button>
+                </div>
+              </div>
+
+              {/* Right Content Pane */}
+              <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }} className="prompt-scrollbar">
+                {(() => {
+                  if (activeSettingView === 'menu') {
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                        <Settings size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 500, margin: '0 0 8px 0', color: 'var(--text-primary)' }}>Settings</h3>
+                        <p style={{ margin: 0, fontSize: '0.95rem' }}>Select an option from the sidebar to view details</p>
                       </div>
-                    </div>
-                  )}
-                </>
-              )}
+                    );
+                  }
+
+                  const view = activeSettingView;
+                  
+                  return (
+                    <>
+                      <div style={{ marginBottom: '24px' }}>
+                        <h3 style={{ fontSize: '1.4rem', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize', display: 'flex', alignItems: 'center' }}>
+                          <span>{view === 'mydata' ? 'My Data' : view === 'myhealthdata' ? 'My Health Data' : view === 'archivedchats' ? 'Archived Chats' : view === 'chatbin' ? 'ChatBin' : view}</span>
+                        </h3>
+                        {view === 'chatbin' && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '8px 0 0 0' }}>Deleted chats will remain here for 72 hours.</p>}
+                      </div>
+
+                      {view === 'chatbin' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {chatSessions.filter(s => s.deletedAt).length > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                              <button onClick={async () => {
+                                if(window.confirm("Permanently delete ALL chats in bin? This cannot be undone.")) {
+                                  const deletedSessions = chatSessions.filter(s => s.deletedAt);
+                                  for(const s of deletedSessions) {
+                                    await moveSessionToDeleted(user?.uid, s);
+                                  }
+                                  setChatSessions(prev => prev.filter(s => !s.deletedAt));
+                                }
+                              }} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(255,75,75,0.3)', background: 'transparent', color: '#ff4b4b', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>Clear All Chats</button>
+                            </div>
+                          )}
+                          {chatSessions.filter(s => s.deletedAt).length === 0 ? (
+                            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px 20px' }}>No deleted chats.</p>
+                          ) : (
+                            chatSessions.filter(s => s.deletedAt).map(session => (
+                              <div key={session.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--btn-bg)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ color: 'var(--text-primary)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: '12px' }}>{session.title}</span>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button onClick={() => handleRestoreSession(session)} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(45, 212, 191, 0.1)', color: '#2dd4bf', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>Restore</button>
+                                  <button onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if(window.confirm("Delete permanently?")) {
+                                        await moveSessionToDeleted(user?.uid, session);
+                                        setChatSessions(prev => prev.filter(s => s.id !== session.id));
+                                      }
+                                    }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,75,75,0.2)', color: '#ff4b4b', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>Delete Now</button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+
+                      {view === 'archivedchats' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {chatSessions.filter(s => s.isArchived).length === 0 ? (
+                            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '40px 20px' }}>No archived chats.</p>
+                          ) : (
+                            chatSessions.filter(s => s.isArchived).map(session => (
+                              <div key={session.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--btn-bg)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ color: 'var(--text-primary)', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginRight: '12px' }}>{session.title}</span>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <button onClick={() => handleUnarchiveSession(session)} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>Unarchive</button>
+                                  <button onClick={(e) => handleDeleteSession(e, session.id)} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,75,75,0.2)', color: '#ff4b4b', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>Delete</button>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+
+                      {view === 'region' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--btn-bg)', padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: '2.5rem', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace', letterSpacing: '2px' }}>
+                              {realTimeClock.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </span>
+                            <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+                              {realTimeClock.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '1rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Region</span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{locationData?.region || 'Detecting...'}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Country</span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{locationData?.country_name || 'Detecting...'}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Country Code</span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{locationData?.country_code || '--'}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <span style={{ color: 'var(--text-secondary)' }}>Timezone</span>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{locationData?.timezone || 'Detecting...'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {view === 'mydata' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '1rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>This data will be used by AI for context.</span>
+                            <button onClick={async () => {
+                              if(isEditingMyData) {
+                                await saveUserProfileData(user?.uid, myData);
+                              }
+                              setIsEditingMyData(!isEditingMyData);
+                            }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
+                              {isEditingMyData ? 'Save' : 'Edit Data'}
+                            </button>
+                          </div>
+                          {Object.entries(myData).map(([key, value]) => (
+                            <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{key}</span>
+                              {isEditingMyData ? (
+                                <input
+                                  type="text"
+                                  value={value}
+                                  onChange={(e) => setMyData(prev => ({ ...prev, [key]: e.target.value }))}
+                                  style={{ background: 'var(--bg-primary)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: '6px', textAlign: 'right' }}
+                                />
+                              ) : (
+                                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{value}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {view === 'myhealthdata' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
+                              Health Documents & Notes
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={() => {
+                                setShowAddHealthTextModal(true);
+                                setNewHealthText('');
+                              }} style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.8rem' }}>+ Add Text</button>
+                              <button onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*,.pdf,.doc,.docx,.html,.txt';
+                                input.onchange = async (e) => {
+                                  const file = e.target.files[0];
+                                  if(!file) return;
+                                  // As a mockup for frontend storage: we convert it to base64
+                                  const reader = new FileReader();
+                                  reader.onload = async (event) => {
+                                    const b64 = event.target.result;
+                                    const newNode = { id: Date.now().toString(), title: file.name, type: 'file', content: b64 };
+                                    setHealthData(prev => [...prev, newNode]);
+                                    await saveHealthDataNode(user?.uid, newNode);
+                                  };
+                                  reader.readAsDataURL(file);
+                                };
+                                input.click();
+                              }} style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.8rem' }}>+ Upload File</button>
+                            </div>
+                          </div>
+                          
+                          {healthData.map(data => (
+                            <div key={data.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', background: 'var(--btn-bg)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div style={{ background: data.type === 'file' ? 'rgba(255,75,75,0.1)' : 'rgba(45, 212, 191, 0.1)', color: data.type === 'file' ? 'var(--accent-color)' : '#2dd4bf', padding: '12px', borderRadius: '12px' }}>
+                                <FileText size={28} />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <h4 style={{ margin: '0 0 6px 0', color: 'var(--text-primary)', fontSize: '1.1rem' }}>{data.title}</h4>
+                                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{data.type === 'file' ? 'Document' : 'Text Note'} • Added to AI Context</p>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={() => {
+                                  if(data.type === 'file' && data.content.startsWith('data:image')) {
+                                    const w = window.open();
+                                    w.document.write(`<img src="${data.content}" style="max-width:100%; height:auto;" />`);
+                                  } else {
+                                    alert(data.content.substring(0, 500) + (data.content.length > 500 ? '...' : ''));
+                                  }
+                                }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>View</button>
+                                <button onClick={async () => {
+                                  if(window.confirm("Delete this health data?")) {
+                                    await deleteHealthDataNode(user?.uid, data.id);
+                                    setHealthData(prev => prev.filter(h => h.id !== data.id));
+                                  }
+                                }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,75,75,0.2)', color: '#ff4b4b', cursor: 'pointer', fontSize: '0.85rem' }}>Remove</button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {showAddHealthTextModal && (
+                            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, backdropFilter: 'blur(4px)' }}>
+                              <div style={{ background: 'var(--bg-primary)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', width: '90%', maxWidth: '400px' }}>
+                                <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)', fontSize: '1.2rem' }}>Add Health Note</h3>
+                                <textarea 
+                                  value={newHealthText} 
+                                  onChange={(e) => setNewHealthText(e.target.value)} 
+                                  placeholder="Write your health note here..."
+                                  style={{ width: '100%', height: '140px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', boxSizing: 'border-box', resize: 'none', marginBottom: '20px', outline: 'none', fontSize: '0.95rem' }}
+                                />
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                                  <button onClick={() => setShowAddHealthTextModal(false)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', borderRadius: '10px', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
+                                  <button onClick={() => {
+                                    if(newHealthText.trim()) {
+                                      const now = new Date();
+                                      const dateStr = now.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+                                      const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                                      const newNode = { 
+                                        id: Date.now().toString(), 
+                                        title: `Text Note • ${dateStr} ${timeStr}`, 
+                                        type: 'text', 
+                                        content: newHealthText 
+                                      };
+                                      setHealthData(prev => [...prev, newNode]);
+                                      saveHealthDataNode(user?.uid, newNode);
+                                      setShowAddHealthTextModal(false);
+                                    }
+                                  }} style={{ padding: '10px 20px', background: 'var(--accent-color)', border: 'none', color: 'white', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>Save Note</button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -1131,9 +1772,22 @@ export default function App() {
               >
                 <ChevronLeft size={24} /> Back
               </button>
-              <h3 style={{ margin: '0 auto', color: 'var(--text-primary)', fontSize: '1.1rem', transform: 'translateX(-32px)' }}>
-                Recovery Plan
+              <h3 style={{ margin: '0 auto', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
+                Health Recovery Plan
               </h3>
+              <a
+                href="/recovery_plan.html"
+                download={`${myData.name ? myData.name.replace(/\s+/g, '_') + '_' : ''}Health_Recovery_Plan.html`}
+                style={{
+                  background: 'var(--accent-color)', color: 'white', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '12px',
+                  fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none', transition: 'opacity 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.opacity = 0.8}
+                onMouseOut={(e) => e.target.style.opacity = 1}
+              >
+                <Download size={18} /> Download
+              </a>
             </div>
 
             {/* Content */}
@@ -1386,6 +2040,112 @@ export default function App() {
                   </button>
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Auth Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: '24px', padding: '40px', maxWidth: '400px', width: '100%', textAlign: 'center', position: 'relative' }}
+            >
+              <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><X size={24} /></button>
+              
+              <div style={{ width: '64px', height: '64px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: 'var(--text-primary)' }}>
+                <Lock size={32} />
+              </div>
+              
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>Login to S.ai</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '32px', lineHeight: 1.5 }}>
+                You have reached the guest limit. Login to continue chatting, save history, and personalize your AI.
+              </p>
+              
+              <button
+                onClick={() => {
+                  // This calls the globally defined handler or inline logic
+                  const provider = new GoogleAuthProvider();
+                  signInWithPopup(auth, provider).then(() => setShowAuthModal(false)).catch(console.error);
+                }}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'white', color: 'black', border: 'none', fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer', transition: 'transform 0.2s' }}
+                onMouseOver={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style={{ width: '20px', height: '20px' }} />
+                Sign in with Google
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding Modal */}
+      <AnimatePresence>
+        {showOnboardingModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'var(--bg-panel)', border: '1px solid var(--glass-border)', borderRadius: '24px', padding: '40px', maxWidth: '500px', width: '100%', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}
+              className="prompt-scrollbar"
+            >
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>Welcome to S.ai!</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '24px' }}>Let's personalize your experience. Please provide a few details.</p>
+              
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!user) return;
+                try {
+                  await saveUserProfileData(user.uid, onboardingData);
+                  setMyData(onboardingData);
+                  setShowOnboardingModal(false);
+                } catch(err) { console.error(err); }
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Full Name *</label>
+                  <input required value={onboardingData.name} onChange={e => setOnboardingData({...onboardingData, name: e.target.value})} type="text" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="John Doe" />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Date of Birth</label>
+                    <input value={onboardingData.dob} onChange={e => setOnboardingData({...onboardingData, dob: e.target.value})} type="date" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Diet</label>
+                    <select value={onboardingData.diet} onChange={e => setOnboardingData({...onboardingData, diet: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }}>
+                      <option value="">Select...</option>
+                      <option value="Veg">Vegetarian</option>
+                      <option value="Non-Veg">Non-Vegetarian</option>
+                      <option value="Vegan">Vegan</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Weight & Height</label>
+                  <input value={onboardingData.weightHeight} onChange={e => setOnboardingData({...onboardingData, weightHeight: e.target.value})} type="text" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="e.g. 70kg, 5'10" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Contact Email</label>
+                  <input value={onboardingData.email} onChange={e => setOnboardingData({...onboardingData, email: e.target.value})} type="email" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="john@example.com" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Phone Number</label>
+                  <input value={onboardingData.phone} onChange={e => setOnboardingData({...onboardingData, phone: e.target.value})} type="tel" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="+91 9876543210" />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                  <button type="button" onClick={() => setShowOnboardingModal(false)} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Skip</button>
+                  <button type="submit" style={{ flex: 2, padding: '14px', borderRadius: '12px', background: 'var(--accent-color)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Save & Continue</button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
