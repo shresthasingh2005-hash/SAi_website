@@ -95,10 +95,37 @@ const streamWithFallback = async (options) => {
   throw new Error("All fallback streaming models exhausted.");
 };
 
+import pdfParse from 'pdf-parse';
+import mammoth from 'mammoth';
+
 export async function POST(req) {
   try {
     const { messages, userProfile, pastMemories } = await req.json();
-    const lastMessage = messages[messages.length - 1].content;
+    let lastMessage = messages[messages.length - 1].content;
+    const attachments = messages[messages.length - 1].attachments || [];
+    
+    let imageParts = [];
+    for (const att of attachments) {
+      if (att.mimeType?.startsWith('image/')) {
+        imageParts.push({ type: 'image', image: att.dataUrl });
+      } else if (att.mimeType?.includes('pdf') || att.name?.endsWith('.pdf')) {
+        try {
+          const buffer = Buffer.from(att.dataUrl.split(',')[1], 'base64');
+          const data = await pdfParse(buffer);
+          lastMessage += `\n\n[Content of attached PDF '${att.name}':]\n${data.text}`;
+        } catch (e) {
+          console.error("Failed to parse PDF:", e);
+        }
+      } else if (att.mimeType?.includes('word') || att.name?.endsWith('.docx')) {
+        try {
+          const buffer = Buffer.from(att.dataUrl.split(',')[1], 'base64');
+          const result = await mammoth.extractRawText({ buffer });
+          lastMessage += `\n\n[Content of attached Document '${att.name}':]\n${result.value}`;
+        } catch (e) {
+          console.error("Failed to parse DOCX:", e);
+        }
+      }
+    }
     
     // Format memory context
     const memoryContext = (pastMemories && pastMemories.length > 0) 
@@ -219,15 +246,19 @@ export async function POST(req) {
         return t;
       };
 
+      const getPayload = (systemPrompt) => {
+        if (imageParts.length > 0) {
+          return {
+            system: systemPrompt,
+            messages: [{ role: 'user', content: [{ type: 'text', text: councilPrompt }, ...imageParts] }]
+          };
+        }
+        return { system: systemPrompt, prompt: councilPrompt };
+      };
+
       const [res1, res2] = await Promise.all([
-        generateWithFallback({
-          system: cleanPrompt(loadPrompt('claude-opus-5.5.md')) + toolOverride,
-          prompt: councilPrompt
-        }),
-        generateWithFallback({
-          system: cleanPrompt(loadPrompt('gpt-6-astra.md')) + toolOverride,
-          prompt: councilPrompt
-        })
+        generateWithFallback(getPayload(cleanPrompt(loadPrompt('claude-opus-5.5.md')) + toolOverride)),
+        generateWithFallback(getPayload(cleanPrompt(loadPrompt('gpt-6-astra.md')) + toolOverride))
       ]);
       draft1 = res1.text;
       draft2 = res2.text;

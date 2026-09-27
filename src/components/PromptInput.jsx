@@ -559,28 +559,49 @@ export const PromptInput = React.forwardRef(
     };
 
     const handleFilesChosen = async (e) => {
-      const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith("image/"));
+      const files = Array.from(e.target.files ?? []);
       e.target.value = ""; 
 
       if (files.length === 0) return;
+      
+      const textFiles = files.filter(f => f.name.match(/\.(txt|csv|json|md)$/i));
+      const otherFiles = files.filter(f => !f.name.match(/\.(txt|csv|json|md)$/i));
+
+      // Process Text Files directly into prompt
+      for (const file of textFiles) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target.result;
+          handleValueChange(value + `\n\n[Attached File: ${file.name}]\n${text}\n`);
+        };
+        reader.readAsText(file);
+      }
+
+      if (otherFiles.length === 0) return;
+
       const room = Math.max(0, maxAttachments - attachments.length);
-      const accepted = files.slice(0, room);
+      const accepted = otherFiles.slice(0, room);
 
       if (!expanded) { setIsSmoothResize(false); setExpanded(true); } 
       else { setIsSmoothResize(true); }
 
       for (const file of accepted) {
         const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = () => addAttachment(file, url, img.naturalWidth, img.naturalHeight);
-        img.onerror = () => addAttachment(file, url, 800, 600);
-        img.src = url;
+        if (file.type.startsWith("image/")) {
+          const img = new Image();
+          img.onload = () => addAttachment(file, url, img.naturalWidth, img.naturalHeight);
+          img.onerror = () => addAttachment(file, url, 800, 600);
+          img.src = url;
+        } else {
+          // Document file (PDF, DOCX)
+          addAttachment(file, url, 800, 600, 'document');
+        }
       }
     };
 
-    const addAttachment = (file, url, width, height) => {
+    const addAttachment = (file, url, width, height, type = 'image') => {
       const id = `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2, 8)}`;
-      setAttachments((prev) => [...prev, { id, file, url, name: file.name, width, height }]);
+      setAttachments((prev) => [...prev, { id, file, url, name: file.name, width, height, type }]);
     };
 
     const removeAttachment = (id) => {
@@ -626,7 +647,7 @@ export const PromptInput = React.forwardRef(
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json,.md"
             multiple
             onChange={handleFilesChosen}
             className="hidden"

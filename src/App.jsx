@@ -427,17 +427,18 @@ export default function App() {
     }
   };
 
-  const handleSend = async (overrideMsg = null) => {
+  const handleSend = async (overrideMsg = null, overrideAttachments = null) => {
     const userMsg = typeof overrideMsg === 'string' ? overrideMsg : input;
-    if ((!userMsg.trim() && !selectedImage) || isLoading) return;
+    const finalAttachments = overrideAttachments || selectedImage;
+    if ((!userMsg.trim() && (!finalAttachments || finalAttachments.length === 0)) || isLoading) return;
 
     chatCountRef.current += 1;
     if (typeof overrideMsg !== 'string') setInput('');
     
-    const imgPayload = selectedImage;
     setSelectedImage(null);
 
-    const newMessages = [...messages, { role: 'user', content: userMsg, image: imgPayload }];
+    const attachmentsArray = Array.isArray(finalAttachments) ? finalAttachments : (finalAttachments ? [finalAttachments] : null);
+    const newMessages = [...messages, { role: 'user', content: userMsg, attachments: attachmentsArray }];
 
     let newTitle = activeSession.title;
     if (newTitle === 'New Chat' && userMsg.trim().length > 0) {
@@ -625,15 +626,19 @@ export default function App() {
             ref={inputRef}
             value={input}
             onChange={setInput}
-            onSubmit={(val, { model, effort, attachments }) => {
+            onSubmit={async (val, { model, effort, attachments }) => {
               if (attachments && attachments.length > 0) {
-                 const file = attachments[0]; 
-                 const reader = new FileReader();
-                 reader.onloadend = () => {
-                   setSelectedImage({ dataUrl: reader.result, mimeType: file.type });
-                   setTimeout(() => handleSend(val), 0);
-                 };
-                 reader.readAsDataURL(file);
+                 const processedAttachments = await Promise.all(attachments.map(file => {
+                   return new Promise((resolve) => {
+                     const reader = new FileReader();
+                     reader.onloadend = () => {
+                       resolve({ dataUrl: reader.result, mimeType: file.type, name: file.name });
+                     };
+                     reader.readAsDataURL(file);
+                   });
+                 }));
+                 setSelectedImage(processedAttachments);
+                 setTimeout(() => handleSend(val, processedAttachments), 0);
               } else {
                  handleSend(val);
               }
@@ -822,6 +827,16 @@ export default function App() {
                       }}>
                         {msg.role === 'user' ? (
                           <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                            {msg.attachments && msg.attachments.map((att, idx) => {
+                              if (att.mimeType?.startsWith('image/')) {
+                                return <img key={idx} src={att.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: '8px', display: 'block' }} />;
+                              }
+                              return (
+                                <div key={idx} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', marginBottom: '8px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
+                                  📄 <span>{att.name || 'Document'}</span>
+                                </div>
+                              );
+                            })}
                             {msg.image && <img src={msg.image.dataUrl} alt="Upload" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '12px', marginBottom: msg.content ? '8px' : '0' }} />}
                             {msg.content}
                           </div>
