@@ -265,14 +265,7 @@ export const PromptInput = React.forwardRef(
     const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
     const [dotCount, setDotCount] = useState(0);
 
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setDotCount(prev => (prev + 1) % 4);
-      }, 500);
-      return () => clearInterval(interval);
-    }, []);
-
-    const animatedPlaceholder = `Ask S.Ai a question${'.'.repeat(dotCount)}`;
+    const animatedPlaceholder = `Ask S.Ai a question...`;
 
     const [attachments, setAttachments] = useState([]);
     const [activeAttachment, setActiveAttachment] = useState(null);

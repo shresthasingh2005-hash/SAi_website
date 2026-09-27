@@ -269,14 +269,7 @@ export default function App() {
   const messages = activeSession ? activeSession.messages : [];
 
   const [input, setInput] = useState('');
-  const [placeholderDots, setPlaceholderDots] = useState('');
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderDots(prev => prev.length >= 3 ? '' : prev + '.');
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
   const [editingMessageIndex, setEditingMessageIndex] = useState(null);
   const [editInput, setEditInput] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
@@ -940,7 +933,7 @@ export default function App() {
                  handleSend(val);
               }
             }}
-            placeholder={`Ask S.Ai a question${placeholderDots}`}
+            placeholder="Ask S.Ai a question..."
           />
         </div>
       </div>
