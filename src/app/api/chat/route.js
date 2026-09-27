@@ -15,6 +15,7 @@ const localproxy = createOpenAI({
   baseURL: process.env.LOCAL_PROXY_URL ? `${process.env.LOCAL_PROXY_URL.replace(/\/$/, '')}/v1` : 'http://127.0.0.1:31415/v1',
   apiKey: process.env.LOCAL_PROXY_API_KEY || 'freellmapi-0061d7cc3ccfabaf3588436f5f1f4602de3c83a8c4dadf31',
   headers: {
+    'ngrok-skip-browser-warning': 'true',
     'Bypass-Tunnel-Reminder': 'true'
   }
 });
