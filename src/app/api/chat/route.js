@@ -95,7 +95,7 @@ const streamWithFallback = async (options) => {
   throw new Error("All fallback streaming models exhausted.");
 };
 
-import pdfParse from 'pdf-parse';
+import { PDFParse as pdfParse } from 'pdf-parse';
 import mammoth from 'mammoth';
 
 export async function POST(req) {
