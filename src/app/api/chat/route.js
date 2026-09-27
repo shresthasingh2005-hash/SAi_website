@@ -108,8 +108,6 @@ const streamWithFallback = async (options) => {
   throw new Error("All fallback streaming models exhausted.");
 };
 
-import { PDFParse as pdfParse } from 'pdf-parse';
-import mammoth from 'mammoth';
 
 export async function POST(req) {
   try {
@@ -123,6 +121,7 @@ export async function POST(req) {
         imageParts.push({ type: 'image', image: att.dataUrl });
       } else if (att.mimeType?.includes('pdf') || att.name?.endsWith('.pdf')) {
         try {
+          const { default: pdfParse } = await import('pdf-parse');
           const buffer = Buffer.from(att.dataUrl.split(',')[1], 'base64');
           const data = await pdfParse(buffer);
           lastMessage += `\n\n[Content of attached PDF '${att.name}':]\n${data.text}`;
@@ -131,8 +130,9 @@ export async function POST(req) {
         }
       } else if (att.mimeType?.includes('word') || att.name?.endsWith('.docx')) {
         try {
+          const mammoth = await import('mammoth');
           const buffer = Buffer.from(att.dataUrl.split(',')[1], 'base64');
-          const result = await mammoth.extractRawText({ buffer });
+          const result = await mammoth.default.extractRawText({ buffer });
           lastMessage += `\n\n[Content of attached Document '${att.name}':]\n${result.value}`;
         } catch (e) {
           console.error("Failed to parse DOCX:", e);
