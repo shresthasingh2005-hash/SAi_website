@@ -1495,7 +1495,7 @@ export default function App() {
                   <Settings size={20} /> Settings
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-                  {['ChatBin', 'Archived Chats', 'My Data', 'My Health Data', 'Region'].map(opt => {
+                  {['ChatBin', 'Archived Chats', 'My Data', 'My Health Data', 'Region', 'Connect with Healthify', 'About S.Ai'].map(opt => {
                     const optKey = opt.toLowerCase().replace(/ /g, '');
                     const isSelected = activeSettingView === optKey;
                     return (
@@ -1541,7 +1541,7 @@ export default function App() {
                     <>
                       <div style={{ marginBottom: '24px' }}>
                         <h3 style={{ fontSize: '1.4rem', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize', display: 'flex', alignItems: 'center' }}><button className="mobile-only-btn" onClick={() => setActiveSettingView('menu')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', marginRight: '12px', cursor: 'pointer' }}><ChevronLeft size={24} /></button>
-                          <span>{view === 'mydata' ? 'My Data' : view === 'myhealthdata' ? 'My Health Data' : view === 'archivedchats' ? 'Archived Chats' : view === 'chatbin' ? 'ChatBin' : view}</span>
+                          <span>{view === 'mydata' ? 'My Data' : view === 'myhealthdata' ? 'My Health Data' : view === 'archivedchats' ? 'Archived Chats' : view === 'chatbin' ? 'ChatBin' : view === 'connectwithhealthify' ? 'Connect with Healthify' : view === 'aboutsai' ? 'About S.Ai' : view}</span>
                         </h3>
                         {view === 'chatbin' && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '8px 0 0 0' }}>Deleted chats will remain here for 72 hours.</p>}
                       </div>
@@ -1644,6 +1644,22 @@ export default function App() {
                             }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
                               {isEditingMyData ? 'Save' : 'Edit Data'}
                             </button>
+                          </div>
+                          {/* My Avatar */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                            onClick={() => {
+                              const w = window.open('', '_blank');
+                              if(w) {
+                                w.document.write('<html><head><title>S.Ai Avatar</title></head><body style="background:#080808;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;"><div style="text-align:center;"><div style="width:160px;height:160px;background:linear-gradient(135deg,#ff4b4b,#9B72CB);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:80px;font-weight:900;color:white;font-family:Outfit,sans-serif;box-shadow:0 0 60px rgba(155,114,203,0.5);margin:0 auto 24px;">S</div><p style="color:#E3E3E3;font-family:sans-serif;font-size:1.2rem;margin:0;">S.Ai Personal Health Assistant</p></div></body></html>');
+                                w.document.close();
+                              }
+                            }}
+                          >
+                            <span style={{ color: 'var(--text-secondary)' }}>My Avatar</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #ff4b4b, #9B72CB)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 900, color: 'white', boxShadow: '0 0 12px rgba(155,114,203,0.5)' }}>S</div>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Tap to view</span>
+                            </div>
                           </div>
                           {Object.entries(myData).map(([key, value]) => (
                             <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1756,6 +1772,156 @@ export default function App() {
                               </div>
                             </div>
                           )}
+                        </div>
+                      )}
+                      {view === 'connectwithhealthify' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '24px', background: 'linear-gradient(135deg, rgba(5,217,232,0.1), rgba(155,114,203,0.1))', borderRadius: '20px', border: '1px solid rgba(5,217,232,0.2)' }}>
+                            <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #05D9E8, #9B72CB)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 900, color: 'white', flexShrink: 0 }}>H</div>
+                            <div>
+                              <h4 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', background: 'linear-gradient(135deg, #05D9E8, #9B72CB)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Healthify</h4>
+                              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Your personal health tracking companion</p>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.1rem', background: 'linear-gradient(90deg, #05D9E8, #9B72CB)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>What is Healthify?</h4>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem' }}>
+                              <span style={{ color: '#05D9E8', fontWeight: 600 }}>Healthify</span> is a personal health management project built alongside S.Ai. It is designed to give you a comprehensive view of your physical and mental well-being — tracking daily vitals, fitness routines, nutrition logs, sleep patterns, and more.
+                            </p>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem' }}>
+                              The idea behind Healthify is simple: <span style={{ color: '#9B72CB', fontWeight: 600 }}>your health data should work for you</span>. By integrating Healthify with S.Ai, your health assistant gets access to your real-time logs, giving it much deeper context to provide truly personalized advice.
+                            </p>
+                          </div>
+                          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <h4 style={{ margin: '0 0 12px 0', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Key Features</h4>
+                            {[
+                              { icon: '📊', label: 'Daily vitals & symptom tracking' },
+                              { icon: '🥗', label: 'Nutrition & meal logging' },
+                              { icon: '🏃', label: 'Fitness & workout history' },
+                              { icon: '😴', label: 'Sleep quality monitoring' },
+                              { icon: '🔗', label: 'Seamless sync with S.Ai context' },
+                            ].map((f, i) => (
+                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                <span style={{ fontSize: '1.2rem' }}>{f.icon}</span>
+                                <span style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>{f.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ textAlign: 'center', padding: '16px', background: 'rgba(5,217,232,0.05)', borderRadius: '12px', border: '1px solid rgba(5,217,232,0.1)' }}>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>🚧 Integration coming soon — stay tuned for the Healthify × S.Ai connection!</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {view === 'aboutsai' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '16px' }}>
+                          {/* Hero */}
+                          <div style={{ textAlign: 'center', padding: '28px 16px', background: 'linear-gradient(135deg, rgba(255,75,75,0.08), rgba(155,114,203,0.08))', borderRadius: '20px', border: '1px solid rgba(155,114,203,0.15)' }}>
+                            <div style={{ width: '72px', height: '72px', background: 'linear-gradient(135deg, #ff4b4b, #9B72CB)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', fontWeight: 900, color: 'white', margin: '0 auto 16px', boxShadow: '0 0 40px rgba(155,114,203,0.4)' }}>S</div>
+                            <h2 style={{ margin: '0 0 8px 0', fontSize: '1.6rem', fontWeight: 800, background: 'linear-gradient(90deg, #ff4b4b, #9B72CB, #05D9E8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>S.Ai — Personal Health Assistant</h2>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>An intelligent, memory-aware AI companion built to care for your health — body and mind.</p>
+                          </div>
+
+                          {/* What is S.Ai */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.1rem', background: 'linear-gradient(90deg, #05D9E8, #9B72CB)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>🤖 What is S.Ai?</h4>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem' }}>S.Ai is a <span style={{ color: '#05D9E8', fontWeight: 600 }}>personal health chatbot</span> designed to feel like a caring, knowledgeable friend. It can answer health-related questions, help track symptoms, suggest wellness routines, give diet and medication information, and support mental well-being — all in a conversational, empathetic way.</p>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: '0.95rem' }}>What makes S.Ai special is its <span style={{ color: '#9B72CB', fontWeight: 600 }}>memory</span>: it remembers your profile, past conversations, and health context to give you truly personalised responses instead of generic advice.</p>
+                          </div>
+
+                          {/* Tech Stack */}
+                          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <h4 style={{ margin: '0 0 14px 0', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Built With</h4>
+                            {[
+                              { icon: '⚛️', label: 'Next.js + React', desc: 'Frontend framework' },
+                              { icon: '🔥', label: 'Firebase', desc: 'Authentication, Firestore database & real-time sync' },
+                              { icon: '🧠', label: 'Gemini AI + LLM Council', desc: 'Multi-model AI pipeline with fast-path routing' },
+                              { icon: '🔍', label: 'Pinecone Vector DB', desc: 'Semantic memory & past conversation retrieval' },
+                              { icon: '🌐', label: 'Tavily Search + Jina Scraper', desc: 'Real-time web knowledge' },
+                              { icon: '📋', label: 'System Prompt Engineering', desc: 'Custom persona, tone & health guidelines' },
+                            ].map((t, i) => (
+                              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 0', borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                                <span style={{ fontSize: '1.2rem', marginTop: '2px' }}>{t.icon}</span>
+                                <div>
+                                  <span style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem', display: 'block' }}>{t.label}</span>
+                                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t.desc}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Timeline */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                            <h4 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', background: 'linear-gradient(90deg, #ff4b4b, #9B72CB)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>🚀 Journey</h4>
+                            {[
+                              {
+                                date: 'June 18, 2026',
+                                version: 'Initial Commit',
+                                color: '#9B72CB',
+                                items: [
+                                  'Project was born — a developer built S.Ai for someone special in his life',
+                                  'First working prototype with Gemini AI integration',
+                                  'Basic chat interface with login and memory using Pinecone',
+                                  'Hinglish-capable health assistant persona established',
+                                ]
+                              },
+                              {
+                                date: 'June 30, 2026',
+                                version: 'Beta v1.0.0',
+                                color: '#05D9E8',
+                                items: [
+                                  'Stable beta launch with full login & session management',
+                                  'Multi-model fallback (Gemini Flash) to handle rate limits',
+                                  'Pinecone semantic memory with embedding retrieval',
+                                  'Serverless Vercel deployment with CORS fixes',
+                                  'System prompt refined for health focus + Hinglish tone',
+                                  'Firebase Firestore for persistent chat history',
+                                ]
+                              },
+                              {
+                                date: 'September 18, 2026',
+                                version: 'Major Update v2.0',
+                                color: '#ff4b4b',
+                                items: [
+                                  'Complete UI overhaul — dark premium design with plasma gradients',
+                                  'Multi-model LLM Council pipeline (Gemini + Groq/Llama-3)',
+                                  'Local proxy support (ngrok, localtunnel, Cloudflare)',
+                                  'Real-time web search via Tavily + Jina web scraper',
+                                  'Attachment support: images, PDFs, DOCX, TXT, CSV',
+                                  'Animated backgrounds, typing effects, gradient themes',
+                                  'ChatBin (recover deleted chats), Archived Chats',
+                                  'My Health Data: upload documents & text notes to AI context',
+                                  'Guest mode with message limit & smart onboarding',
+                                  'S.Ai Avatar with speech bubble on hover/tap',
+                                  'Fully responsive mobile layout with premium settings panel',
+                                  'Auto email population from Firebase auth',
+                                  'Logout confirmation, real-time clock & location in settings',
+                                ]
+                              },
+                            ].map((milestone, mi) => (
+                              <div key={mi} style={{ display: 'flex', gap: '16px', paddingBottom: '24px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: milestone.color, boxShadow: '0 0 8px ' + milestone.color, flexShrink: 0, marginTop: '4px' }} />
+                                  {mi < 2 && <div style={{ width: '2px', flex: 1, background: 'rgba(255,255,255,0.06)', marginTop: '4px' }} />}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{milestone.date}</span>
+                                    <span style={{ padding: '2px 10px', borderRadius: '20px', background: milestone.color + '22', color: milestone.color, fontSize: '0.75rem', fontWeight: 700, border: '1px solid ' + milestone.color + '44' }}>{milestone.version}</span>
+                                  </div>
+                                  <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {milestone.items.map((item, ii) => (
+                                      <li key={ii} style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>{item}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div style={{ textAlign: 'center', padding: '16px', background: 'rgba(155,114,203,0.06)', borderRadius: '12px', border: '1px solid rgba(155,114,203,0.12)' }}>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Made with <span style={{ color: '#ff4b4b' }}>♥</span> by a developer, for someone very special.</p>
+                          </div>
                         </div>
                       )}
                     </>
