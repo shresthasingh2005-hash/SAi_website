@@ -1727,7 +1727,28 @@ const _now = Date.now();
                                 <button onClick={() => {
                                   if(data.type === 'file' && data.content.startsWith('data:image')) {
                                     const w = window.open();
-                                    w.document.write(`<img src="${data.content}" style="max-width:100%; height:auto;" />`);
+                                    if(w) w.document.write(`<img src="${data.content}" style="max-width:100%; height:auto;" />`);
+                                  } else if (data.type === 'file' && data.content.startsWith('data:application/pdf')) {
+                                    try {
+                                      const byteString = atob(data.content.split(',')[1]);
+                                      const ab = new ArrayBuffer(byteString.length);
+                                      const ia = new Uint8Array(ab);
+                                      for (let i = 0; i < byteString.length; i++) { ia[i] = byteString.charCodeAt(i); }
+                                      const blob = new Blob([ab], {type: 'application/pdf'});
+                                      const url = URL.createObjectURL(blob);
+                                      window.open(url, '_blank');
+                                    } catch(e) {
+                                      const w = window.open();
+                                      if(w) w.document.write(`<iframe src="${data.content}" style="width:100%;height:100vh;border:none;"></iframe>`);
+                                    }
+                                  } else if (typeof data.content === 'string' && (data.content.trim().startsWith('<') || data.content.includes('<!DOCTYPE'))) {
+                                    const w = window.open('', '_blank');
+                                    if(w) {
+                                      w.document.write(data.content);
+                                      w.document.close();
+                                    } else {
+                                      alert("Popup blocked. Please allow popups to view this document.");
+                                    }
                                   } else {
                                     alert(data.content.substring(0, 500) + (data.content.length > 500 ? '...' : ''));
                                   }
