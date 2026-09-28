@@ -6,6 +6,7 @@ import { cn } from "../lib/utils";
 import GradientSendButton from "./GradientSendButton";
 import SendLoader from "./SendLoader";
 import InputCursorLoader from "./InputCursorLoader";
+import AvatarMascot from "./AvatarMascot";
 
 const SPRING_TRANSITION = "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
 const SMOOTH_HEIGHT_TRANSITION = "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.15s ease-out";
@@ -663,6 +664,13 @@ export const PromptInput = React.forwardRef(
           className={cn("relative flex flex-col w-full mx-auto", className)}
           style={{ maxWidth: 760, margin: '0 auto' }}
         >
+          <AvatarMascot 
+            isTyping={isTyping} 
+            textareaRef={textareaRef} 
+            isFocused={isFocused} 
+            value={value} 
+            isThinking={isThinking}
+          />
           <input
             ref={fileInputRef}
             type="file"
@@ -739,7 +747,11 @@ export const PromptInput = React.forwardRef(
                 onChange={(e) => handleValueChange(e.target.value)}
                 onScroll={updateFades}
                 onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onBlur={() => {
+                  setIsFocused(false);
+                  setIsTyping(false);
+                  if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();

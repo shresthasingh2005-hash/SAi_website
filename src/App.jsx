@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle, MoreVertical, Archive, Trash2, Edit2 } from 'lucide-react';
+import { Send, Menu, MessageSquare, Plus, Settings, X, Search, Moon, Sun, Monitor, Heart, Shield, Sparkles, Activity, FileText, Download, Check, ChevronDown, Copy, Maximize2, Minimize2, Image, Camera, Paperclip, Music, Video, Smile, Compass, Eye, EyeOff, Lock, Unlock, Square, Cpu, Zap, Bug, PartyPopper, Palette, LogIn, SlidersHorizontal, ChevronLeft, ArrowRight, ChevronRight, AlertTriangle, MoreVertical, Archive, Trash2, Edit2, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -82,6 +82,10 @@ const TypewriterMarkdown = ({ content, isNew }) => {
 
 
 export default function App() {
+  const getUserId = (u) => {
+    if (!u) return 'guest_user';
+    return u.email ? u.email.split('@')[0] : u.uid;
+  };
   const defaultApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -93,7 +97,9 @@ export default function App() {
   const [guestMessageCount, setGuestMessageCount] = useState(0);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
-  const [onboardingData, setOnboardingData] = useState({ name: '', dob: '', diet: '', weightHeight: '', email: '', phone: '', healthInfo: '' });
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [onboardingData, setOnboardingData] = useState({ name: '', gender: '', ai: '', age: '', dob: '', diet: '', weightHeight: '', email: '', phone: '', healthInfo: '' });
+  const [onboardingStep, setOnboardingStep] = useState(1);
 
   const [chatSessions, setChatSessions] = useState([]);
   const [activeSessionId, setActiveSessionId] = useState(null);
@@ -153,7 +159,7 @@ export default function App() {
       e.preventDefault();
       if (!user) return;
       try {
-        await saveUserProfileData(user.uid, onboardingData);
+        await saveUserProfileData(getUserId(user), onboardingData);
         setMyData(onboardingData);
         setShowOnboardingModal(false);
       } catch (err) {
@@ -167,11 +173,11 @@ export default function App() {
       if (activeUser) {
         // Track when Sahityaka opens the app
         try {
-          updateUserLastSeen(activeUser.uid);
+          updateUserLastSeen(getUserId(activeUser));
         } catch(e) { console.warn("Could not update last seen", e) }
         
         try {
-          const loaded = await loadSessionsFromFirestore(activeUser.uid);
+          const loaded = await loadSessionsFromFirestore(getUserId(activeUser));
           if (loaded && loaded.length > 0) {
             if (loaded[0].messages.length === 0) {
               setChatSessions(loaded);
@@ -181,25 +187,25 @@ export default function App() {
               const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
               setChatSessions([newSession, ...loaded]);
               setActiveSessionId(newId);
-              try { saveSessionToFirestore(activeUser.uid, newSession); } catch(e){}
+              try { saveSessionToFirestore(getUserId(activeUser), newSession); } catch(e){}
             }
           } else {
             const newId = Math.random().toString(36).substring(2, 9);
             const newSession = { id: newId, title: 'New Chat', messages: [], updatedAt: Date.now() };
             setChatSessions([newSession]);
             setActiveSessionId(newId);
-            try { saveSessionToFirestore(activeUser.uid, newSession); } catch(e){}
+            try { saveSessionToFirestore(getUserId(activeUser), newSession); } catch(e){}
           }
           
           try {
-            const profileData = await loadUserProfileData(activeUser.uid);
+            const profileData = await loadUserProfileData(getUserId(activeUser));
             if (profileData && profileData.name) {
               setMyData(profileData);
             } else {
               setShowOnboardingModal(true);
             }
             
-            const hData = await loadHealthData(activeUser.uid);
+            const hData = await loadHealthData(getUserId(activeUser));
             if (hData && hData.length > 0) setHealthData(hData);
           } catch (e) {
             console.error("Error loading user profile/health data", e);
@@ -289,7 +295,7 @@ export default function App() {
     if (!session) return;
     
     const updated = { ...session, deletedAt: Date.now(), updatedAt: Date.now() };
-    saveSessionToFirestore(user?.uid, updated);
+    saveSessionToFirestore(getUserId(user), updated);
     setChatSessions(prev => prev.map(s => s.id === sessionId ? updated : s));
     
     if (activeSessionId === sessionId) {
@@ -301,7 +307,7 @@ export default function App() {
 
   const handleRestoreSession = async (session) => {
     const updated = { ...session, deletedAt: null, updatedAt: Date.now() };
-    saveSessionToFirestore(user?.uid, updated);
+    saveSessionToFirestore(getUserId(user), updated);
     setChatSessions(prev => prev.map(s => s.id === session.id ? updated : s));
   };
 
@@ -313,8 +319,8 @@ export default function App() {
       
       let anyMoved = false;
       for (const session of expiredSessions) {
-        if (user?.uid) {
-          await moveSessionToDeleted(user.uid, session);
+        if (user) {
+          await moveSessionToDeleted(getUserId(user), session);
           anyMoved = true;
         }
       }
@@ -322,7 +328,7 @@ export default function App() {
         setChatSessions(prev => prev.filter(s => !(s.deletedAt && (now - s.deletedAt > SEVENTY_TWO_HOURS))));
       }
     };
-    if (chatSessions.length > 0 && user?.uid) {
+    if (chatSessions.length > 0 && user) {
       checkExpiredSessions();
     }
   }, [chatSessions.length, user]);
@@ -330,7 +336,7 @@ export default function App() {
   const handleArchiveSession = async (e, session) => {
     e.stopPropagation();
     const updated = { ...session, isArchived: true, updatedAt: Date.now() };
-    saveSessionToFirestore(user?.uid, updated);
+    saveSessionToFirestore(getUserId(user), updated);
     setChatSessions(prev => prev.map(s => s.id === session.id ? updated : s));
     if (activeSessionId === session.id) {
        const activeRemaining = chatSessions.filter(s => s.id !== session.id && !s.isArchived);
@@ -341,7 +347,7 @@ export default function App() {
 
   const handleUnarchiveSession = async (session) => {
     const updated = { ...session, isArchived: false, updatedAt: Date.now() };
-    saveSessionToFirestore(user?.uid, updated);
+    saveSessionToFirestore(getUserId(user), updated);
     setChatSessions(prev => prev.map(s => s.id === session.id ? updated : s));
   };
 
@@ -556,7 +562,7 @@ export default function App() {
     };
     setChatSessions(prev => [newSession, ...prev]);
     setActiveSessionId(newId);
-    saveSessionToFirestore(user.uid, newSession);
+    saveSessionToFirestore(getUserId(user), newSession);
     setIsSidebarOpen(false);
   };
 
@@ -611,7 +617,7 @@ export default function App() {
      // Note: We'd want to also persist this change, but for simple navigation we can just update local state,
      // or trigger a save. Let's do a quick save.
      const updatedSession = { ...chatSessions.find(s => s.id === activeSessionId), messages: [...messages] };
-     saveSessionToFirestore(user?.uid, updatedSession);
+     saveSessionToFirestore(getUserId(user), updatedSession);
   };
 
   const performTavilySearch = async (query) => {
@@ -690,13 +696,13 @@ export default function App() {
     const updatedSession = { id: activeSessionId, title: newTitle, messages: newMessages, updatedAt: Date.now() };
     setChatSessions(prev => prev.map(s => s.id === activeSessionId ? updatedSession : s));
     if (user) {
-      saveSessionToFirestore(user.uid, updatedSession);
+      saveSessionToFirestore(getUserId(user), updatedSession);
     } else {
       saveSessionToFirestore("guest_user", updatedSession);
     }
 
     // Save user message to AI's long-term memory
-    saveMemoryToPinecone(userMsgContent, 'user', activeSessionId, user?.uid);
+    saveMemoryToPinecone(userMsgContent, 'user', activeSessionId, getUserId(user));
 
     setIsLoading(true);
     setIsThinking(true);
@@ -706,7 +712,7 @@ export default function App() {
 
     try {
       // Search Pinecone for relevant past memories
-      const pastMemories = await searchMemories(userMsgContent, user?.uid);
+      const pastMemories = await searchMemories(userMsgContent, getUserId(user));
 
       // Reset abort tokens
       abortControllerRef.current = new AbortController();
@@ -789,7 +795,7 @@ export default function App() {
       setChatSessions(prev => prev.map(s => s.id === activeSessionId ? finalSession : s));
       
       if (user) {
-        saveSessionToFirestore(user.uid, finalSession);
+        saveSessionToFirestore(getUserId(user), finalSession);
         
         if (extractedHealth) {
           const newNode = {
@@ -798,42 +804,46 @@ export default function App() {
             content: extractedHealth,
             type: 'text'
           };
-          saveHealthDataNode(user.uid, newNode);
+          saveHealthDataNode(getUserId(user), newNode);
           setHealthData(prev => [...(prev||[]), newNode]);
         }
       } else {
         saveSessionToFirestore("guest_user", finalSession);
       }
-      saveMemoryToPinecone(cleanedReply, 'model', activeSessionId, user?.uid);
+      saveMemoryToPinecone(cleanedReply, 'model', activeSessionId, getUserId(user));
 
       setIsLoading(false);
       scrollToBottom();
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log("Generation aborted by user");
-        if (fullReply.trim() !== '') {
-          let finalModelMsg;
-          if (editIndex !== null) {
-            finalModelMsg = {
-              role: 'model',
-              content: fullReply,
-              isNew: true,
-              variants: newModelVariants,
-              activeVariant: newModelActiveVariant
-            };
-            finalModelMsg.variants[newModelActiveVariant] = fullReply;
-          } else {
-            finalModelMsg = { role: 'model', content: fullReply, isNew: true };
-          }
-          const finalSession = { id: activeSessionId, title: updatedSession.title, messages: [...newMessages, finalModelMsg], updatedAt: Date.now() };
-          setChatSessions(prev => prev.map(s => s.id === activeSessionId ? finalSession : s));
-          if (user) {
-            saveSessionToFirestore(user.uid, finalSession);
-          } else {
-            saveSessionToFirestore("guest_user", finalSession);
-          }
-          saveMemoryToPinecone(fullReply, 'model', activeSessionId, user?.uid);
+        
+        const interruptedMsg = "\n\n*[Your response has been interrupted or canceled.]*";
+        fullReply = (fullReply.trim() !== '' ? fullReply + interruptedMsg : "*[Your response has been interrupted or canceled.]*");
+        
+        let finalModelMsg;
+        if (editIndex !== null) {
+          finalModelMsg = {
+            role: 'model',
+            content: fullReply,
+            isNew: true,
+            variants: newModelVariants,
+            activeVariant: newModelActiveVariant
+          };
+          finalModelMsg.variants[newModelActiveVariant] = fullReply;
+        } else {
+          finalModelMsg = { role: 'model', content: fullReply, isNew: true };
         }
+        
+        const finalSession = { id: activeSessionId, title: updatedSession.title, messages: [...newMessages, finalModelMsg], updatedAt: Date.now() };
+        setChatSessions(prev => prev.map(s => s.id === activeSessionId ? finalSession : s));
+        if (user) {
+          saveSessionToFirestore(getUserId(user), finalSession);
+        } else {
+          saveSessionToFirestore("guest_user", finalSession);
+        }
+        saveMemoryToPinecone(fullReply, 'model', activeSessionId, getUserId(user));
+        
         return;
       }
       console.error(error);
@@ -852,7 +862,7 @@ export default function App() {
         updatedAt: Date.now() 
       };
       if (user) {
-        saveSessionToFirestore(user.uid, fallbackUpdate);
+        saveSessionToFirestore(getUserId(user), fallbackUpdate);
       } else {
         saveSessionToFirestore("guest_user", fallbackUpdate);
       }
@@ -1283,16 +1293,10 @@ export default function App() {
                     onClick={() => setHoveredMessageIndex(i)}
                     style={{ display: 'flex', flexDirection: 'column', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}
                   >
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: msg.role === 'user' ? 'center' : 'flex-start' }}>
                       {msg.role === 'model' && (
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(10, 10, 10, 0.8)', border: '1px solid rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px rgba(5, 217, 232, 0.2)' }}>
-                          <motion.span 
-                            animate={{ filter: ['hue-rotate(0deg)', 'hue-rotate(360deg)'] }}
-                            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-                            style={{ background: 'linear-gradient(135deg, #05D9E8 0%, #FF2A6D 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900, fontSize: '17px', letterSpacing: '-0.5px' }}
-                          >
-                            S
-                          </motion.span>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(10, 10, 10, 0.8)', border: '1px solid rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', boxShadow: '0 0 15px rgba(5, 217, 232, 0.2)' }}>
+                          <img src="/avatar_profile.png" alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
                         </div>
                       )}
 
@@ -1345,6 +1349,16 @@ export default function App() {
                           </div>
                         )}
                       </div>
+                      
+                      {msg.role === 'user' && (
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                          {user && myData?.gender ? (
+                            <img src={myData?.gender === 'female' ? '/avatar_user_female.jpg' : '/avatar_user_male.jpg'} alt="User Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <User size={20} color="var(--text-secondary)" />
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Bar (Hover/Tap to show) */}
@@ -1352,6 +1366,7 @@ export default function App() {
                       display: 'flex', 
                       justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
                       paddingLeft: msg.role === 'model' ? '44px' : '0', // Align with text past the avatar
+                      paddingRight: msg.role === 'user' ? '44px' : '0', // Align with text past the user avatar
                       marginTop: '4px',
                       opacity: hoveredMessageIndex === i || copiedMessageIndex === i ? 1 : 0,
                       pointerEvents: hoveredMessageIndex === i || copiedMessageIndex === i ? 'auto' : 'none',
@@ -1493,7 +1508,7 @@ export default function App() {
                   })}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
-                  <button onClick={() => signOut(auth)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 75, 75, 0.3)', background: 'transparent', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b', transition: 'all 0.2s' }} onMouseOver={(e)=>e.target.style.background='rgba(255,75,75,0.1)'} onMouseOut={(e)=>e.target.style.background='transparent'}>Log Out</button>
+                  <button onClick={() => setShowLogoutConfirm(true)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255, 75, 75, 0.3)', background: 'transparent', cursor: 'pointer', fontWeight: 600, color: '#ff4b4b', transition: 'all 0.2s' }} onMouseOver={(e)=>e.target.style.background='rgba(255,75,75,0.1)'} onMouseOut={(e)=>e.target.style.background='transparent'}>Log Out</button>
                 </div>
               </div>
 
@@ -1529,7 +1544,7 @@ export default function App() {
                                 if(window.confirm("Permanently delete ALL chats in bin? This cannot be undone.")) {
                                   const deletedSessions = chatSessions.filter(s => s.deletedAt);
                                   for(const s of deletedSessions) {
-                                    await moveSessionToDeleted(user?.uid, s);
+                                    await moveSessionToDeleted(getUserId(user), s);
                                   }
                                   setChatSessions(prev => prev.filter(s => !s.deletedAt));
                                 }
@@ -1547,7 +1562,7 @@ export default function App() {
                                   <button onClick={async (e) => {
                                       e.stopPropagation();
                                       if(window.confirm("Delete permanently?")) {
-                                        await moveSessionToDeleted(user?.uid, session);
+                                        await moveSessionToDeleted(getUserId(user), session);
                                         setChatSessions(prev => prev.filter(s => s.id !== session.id));
                                       }
                                     }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,75,75,0.2)', color: '#ff4b4b', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>Delete Now</button>
@@ -1613,7 +1628,7 @@ export default function App() {
                             <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>This data will be used by AI for context.</span>
                             <button onClick={async () => {
                               if(isEditingMyData) {
-                                await saveUserProfileData(user?.uid, myData);
+                                await saveUserProfileData(getUserId(user), myData);
                               }
                               setIsEditingMyData(!isEditingMyData);
                             }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
@@ -1662,7 +1677,7 @@ export default function App() {
                                     const b64 = event.target.result;
                                     const newNode = { id: Date.now().toString(), title: file.name, type: 'file', content: b64 };
                                     setHealthData(prev => [...prev, newNode]);
-                                    await saveHealthDataNode(user?.uid, newNode);
+                                    await saveHealthDataNode(getUserId(user), newNode);
                                   };
                                   reader.readAsDataURL(file);
                                 };
@@ -1691,7 +1706,7 @@ export default function App() {
                                 }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '0.85rem' }}>View</button>
                                 <button onClick={async () => {
                                   if(window.confirm("Delete this health data?")) {
-                                    await deleteHealthDataNode(user?.uid, data.id);
+                                    await deleteHealthDataNode(getUserId(user), data.id);
                                     setHealthData(prev => prev.filter(h => h.id !== data.id));
                                   }
                                 }} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'rgba(255,75,75,0.2)', color: '#ff4b4b', cursor: 'pointer', fontSize: '0.85rem' }}>Remove</button>
@@ -1723,7 +1738,7 @@ export default function App() {
                                         content: newHealthText 
                                       };
                                       setHealthData(prev => [...prev, newNode]);
-                                      saveHealthDataNode(user?.uid, newNode);
+                                      saveHealthDataNode(getUserId(user), newNode);
                                       setShowAddHealthTextModal(false);
                                     }
                                   }} style={{ padding: '10px 20px', background: 'var(--accent-color)', border: 'none', color: 'white', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>Save Note</button>
@@ -2101,54 +2116,126 @@ export default function App() {
               
               <form onSubmit={async (e) => {
                 e.preventDefault();
+                if (onboardingStep === 1) {
+                  // Make sure non-skippable are filled
+                  if (!onboardingData.name || !onboardingData.gender || !onboardingData.ai || (!onboardingData.age && !onboardingData.dob)) return;
+                  setOnboardingStep(2);
+                  return;
+                }
                 if (!user) return;
                 try {
-                  await saveUserProfileData(user.uid, onboardingData);
+                  await saveUserProfileData(getUserId(user), onboardingData);
                   setMyData(onboardingData);
                   setShowOnboardingModal(false);
                 } catch(err) { console.error(err); }
               }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Full Name *</label>
-                  <input required value={onboardingData.name} onChange={e => setOnboardingData({...onboardingData, name: e.target.value})} type="text" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="John Doe" />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Date of Birth</label>
-                    <input value={onboardingData.dob} onChange={e => setOnboardingData({...onboardingData, dob: e.target.value})} type="date" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Diet</label>
-                    <select value={onboardingData.diet} onChange={e => setOnboardingData({...onboardingData, diet: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }}>
-                      <option value="">Select...</option>
-                      <option value="Veg">Vegetarian</option>
-                      <option value="Non-Veg">Non-Vegetarian</option>
-                      <option value="Vegan">Vegan</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Weight & Height</label>
-                  <input value={onboardingData.weightHeight} onChange={e => setOnboardingData({...onboardingData, weightHeight: e.target.value})} type="text" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="e.g. 70kg, 5'10" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Contact Email</label>
-                  <input value={onboardingData.email} onChange={e => setOnboardingData({...onboardingData, email: e.target.value})} type="email" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="john@example.com" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Phone Number</label>
-                  <input value={onboardingData.phone} onChange={e => setOnboardingData({...onboardingData, phone: e.target.value})} type="tel" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="+91 9876543210" />
-                </div>
                 
-                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <button type="button" onClick={() => setShowOnboardingModal(false)} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Skip</button>
-                  <button type="submit" style={{ flex: 2, padding: '14px', borderRadius: '12px', background: 'var(--accent-color)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Save & Continue</button>
-                </div>
+                {onboardingStep === 1 ? (
+                  <>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Full Name *</label>
+                      <input required value={onboardingData.name} onChange={e => setOnboardingData({...onboardingData, name: e.target.value})} type="text" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="John Doe" />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Gender *</label>
+                      <select required value={onboardingData.gender} onChange={e => setOnboardingData({...onboardingData, gender: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }}>
+                        <option value="">Select...</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Preferred AI Style *</label>
+                      <select required value={onboardingData.ai} onChange={e => setOnboardingData({...onboardingData, ai: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }}>
+                        <option value="">Select...</option>
+                        <option value="default">Default</option>
+                        <option value="friendly">Friendly & Casual</option>
+                        <option value="professional">Professional</option>
+                        <option value="concise">Short & Crisp</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Age (or DOB) *</label>
+                        <input value={onboardingData.age} onChange={e => setOnboardingData({...onboardingData, age: e.target.value})} type="number" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="e.g. 24" />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Date of Birth *</label>
+                        <input value={onboardingData.dob} onChange={e => setOnboardingData({...onboardingData, dob: e.target.value})} type="date" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} />
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '-8px' }}>Please provide either Age or Date of Birth.</p>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                      <button type="submit" disabled={!onboardingData.name || !onboardingData.gender || !onboardingData.ai || (!onboardingData.age && !onboardingData.dob)} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'var(--accent-color)', color: 'white', border: 'none', fontWeight: 600, cursor: (!onboardingData.name || !onboardingData.gender || !onboardingData.ai || (!onboardingData.age && !onboardingData.dob)) ? 'default' : 'pointer', opacity: (!onboardingData.name || !onboardingData.gender || !onboardingData.ai || (!onboardingData.age && !onboardingData.dob)) ? 0.5 : 1 }}>Next</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Diet</label>
+                      <select value={onboardingData.diet} onChange={e => setOnboardingData({...onboardingData, diet: e.target.value})} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }}>
+                        <option value="">Select...</option>
+                        <option value="Veg">Vegetarian</option>
+                        <option value="Non-Veg">Non-Vegetarian</option>
+                        <option value="Vegan">Vegan</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Weight & Height</label>
+                      <input value={onboardingData.weightHeight} onChange={e => setOnboardingData({...onboardingData, weightHeight: e.target.value})} type="text" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="e.g. 70kg, 5'10" />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Contact Email</label>
+                      <input value={onboardingData.email} onChange={e => setOnboardingData({...onboardingData, email: e.target.value})} type="email" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="john@example.com" />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Phone Number</label>
+                      <input value={onboardingData.phone} onChange={e => setOnboardingData({...onboardingData, phone: e.target.value})} type="tel" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', fontSize: '1rem' }} placeholder="+91 9876543210" />
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                      <button type="button" onClick={async () => {
+                        if (!user) return;
+                        try {
+                          await saveUserProfileData(getUserId(user), onboardingData);
+                          setMyData(onboardingData);
+                          setShowOnboardingModal(false);
+                        } catch(err) { console.error(err); }
+                      }} style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Skip for now</button>
+                      <button type="submit" style={{ flex: 2, padding: '14px', borderRadius: '12px', background: 'var(--accent-color)', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Save & Finish</button>
+                    </div>
+                  </>
+                )}
               </form>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Logout Confirmation Modal */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'var(--bg-card)', padding: '32px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', textAlign: 'center' }}
+            >
+              <AlertTriangle size={48} color="#ff4b4b" style={{ margin: '0 auto 16px auto' }} />
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.5rem', color: 'var(--text-primary)' }}>Are you sure you want to log out?</h3>
+              <p style={{ margin: '0 0 24px 0', color: 'var(--text-secondary)' }}>You will need to sign in again to access your chat history.</p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={() => setShowLogoutConfirm(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>No</button>
+                <button onClick={() => { setShowLogoutConfirm(false); signOut(auth); }} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#ff4b4b', border: 'none', color: 'white', cursor: 'pointer', fontWeight: 600 }}>Yes, Log Out</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
     </div>
   );
