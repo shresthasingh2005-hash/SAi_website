@@ -1,4 +1,4 @@
-﻿# S.Ai — Personal Health Assistant
+# S.Ai — Personal Health Assistant
 
 **An intelligent, memory-aware AI companion built to care for your health — body and mind.**
 
@@ -37,18 +37,49 @@ Whether you want to check symptoms, understand a medication, plan your diet, or 
 
 ## 🏗️ Architecture
 
-`
-S.Ai
-├── Frontend     → Next.js 16 + React (App Router)
-├── Auth & DB    → Firebase Auth + Firestore
-├── AI Pipeline  → Multi-model LLM Council
-│   ├── Primary  → Google Gemini (via AI SDK)
-│   ├── Fallback → Groq (Llama-3) via local proxy
-│   └── Fast Path→ Direct Gemini for simple questions
-├── Memory       → Pinecone Vector DB (semantic search)
-├── Web Search   → Tavily Search API + Jina.ai Scraper
-└── Deployment   → Vercel (serverless)
-`
+```mermaid
+graph TD
+    User([👤 User]) -->|Interacts via| UI
+    
+    subgraph Client [S.Ai Frontend]
+        UI[📱 Next.js App Router]
+        Auth[🔒 Firebase Auth]
+    end
+    
+    subgraph Database [Storage & Context]
+        Firestore[(🗂️ Firestore DB)]
+        Memory[(🧠 Pinecone Vector DB)]
+        HealthData[(🏥 My Health Data)]
+    end
+    
+    subgraph Pipeline [S.Ai Intelligence Council]
+        Router{🔀 Query Router}
+        Gemini[✨ Gemini AI]
+        Groq[⚡ Groq Llama-3]
+        Search[🌐 Tavily + Jina]
+    end
+    
+    UI -->|Queries| Router
+    UI -.->|Login| Auth
+    UI -->|Save Chats| Firestore
+    
+    Router -->|Retrieve History| Memory
+    Router -->|Read Records| HealthData
+    Router -.->|Fetch Web Info| Search
+    
+    Router -->|Primary Engine| Gemini
+    Router -->|Fallback/Fast| Groq
+    
+    Gemini -->|Response| UI
+    Groq -->|Response| UI
+    
+    %% Styling
+    style UI fill:#9B72CB,stroke:#fff,stroke-width:2px,color:#fff
+    style Gemini fill:#ff4b4b,stroke:#fff,stroke-width:2px,color:#fff
+    style Groq fill:#222,stroke:#fff,stroke-width:2px,color:#fff
+    style Firestore fill:#F5820D,stroke:#fff,stroke-width:2px,color:#fff
+    style Memory fill:#00A67E,stroke:#fff,stroke-width:2px,color:#fff
+```
 
 The AI system uses a **custom system prompt** to shape personality, tone, health expertise, and language behaviour. The prompt's contents are intentionally kept private — no internal instructions, persona rules, or API configurations are exposed publicly.
 
