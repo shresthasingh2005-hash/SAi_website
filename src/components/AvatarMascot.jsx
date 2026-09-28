@@ -162,10 +162,10 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
             marginBottom: '16px',
             animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
             width: 'max-content',
-            maxWidth: '220px'
+            maxWidth: '260px'
           }}
         >
-          <div className="bg-[rgba(20,20,20,0.95)] backdrop-blur-md border border-[rgba(255,255,255,0.15)] text-[var(--text-primary)] text-sm rounded-2xl px-5 py-3.5 shadow-xl relative" style={{ lineHeight: '1.5' }}>
+          <div className="bg-[rgba(20,20,20,0.95)] backdrop-blur-md border border-[rgba(255,255,255,0.15)] text-[var(--text-primary)] text-sm rounded-2xl shadow-xl relative" style={{ lineHeight: '1.5', padding: '16px 20px' }}>
             Hello, I am S.Ai, your personal health assistant, how may I help you?
             <div className="absolute bottom-[-7px] w-3 h-3 bg-[rgba(20,20,20,0.95)] border-b border-r border-[rgba(255,255,255,0.15)] transform rotate-45" style={{ left: '18px' }} />
           </div>
