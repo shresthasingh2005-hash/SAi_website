@@ -1471,7 +1471,8 @@ export default function App() {
               animate={{ scale: 1, y: 0, opacity: 1 }} 
               exit={{ scale: 0.8, y: 50, opacity: 0 }} 
               transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
-              style={{ padding: 0, borderRadius: '24px', maxWidth: '1200px', width: '90vw', height: '85vh', minHeight: '600px', maxHeight: '900px', position: 'relative', display: 'flex', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', background: 'rgba(15,15,15,0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="settings-modal-inner"
+              style={{ padding: 0, borderRadius: '24px', maxWidth: '1200px', width: '90vw', height: '85vh', minHeight: '600px', maxHeight: '900px', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', background: 'rgba(15,15,15,0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               <button 
                 onClick={() => setShowSettings(false)}
@@ -1482,7 +1483,7 @@ export default function App() {
                 <X size={18} />
               </button>
               {/* Left Sidebar Pane */}
-              <div style={{ width: '250px', background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.08)', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div className="settings-sidebar" style={{ background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.08)', padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <h3 style={{ marginBottom: '24px', fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Settings size={20} /> Settings
                 </h3>
