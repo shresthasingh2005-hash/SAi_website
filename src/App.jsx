@@ -1977,7 +1977,7 @@ export default function App() {
                            </div>
                            <div style={{ padding: '12px 16px', background: '#1A1A1C', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                               <Plus size={18} color="rgba(255,255,255,0.6)" />
-                              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', flex: 1, textAlign: 'center' }}>Ask S anything...</span>
+                              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.9rem', flex: 1, textAlign: 'center' }}>Ask S anything<span className="osui-text-loader-pulse">...</span></span>
                               <div style={{ width: '18px' }}></div>
                            </div>
                          </div>
