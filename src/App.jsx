@@ -202,7 +202,8 @@ export default function App() {
             if (profileData && profileData.name) {
               setMyData(profileData);
             } else {
-              setShowOnboardingModal(true);
+              if (activeUser.email) { setOnboardingData(prev => ({ ...prev, email: activeUser.email })); }
+                setShowOnboardingModal(true);
             }
             
             const hData = await loadHealthData(getUserId(activeUser));
