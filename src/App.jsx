@@ -102,6 +102,13 @@ export default function App() {
   const [onboardingStep, setOnboardingStep] = useState(1);
 
   const [chatSessions, setChatSessions] = useState([]);
+  const [placeholderDots, setPlaceholderDots] = useState('');
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderDots(prev => prev.length >= 3 ? '' : prev + '.');
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [bgTheme, setBgTheme] = useState('midnight');
 
@@ -945,7 +952,7 @@ export default function App() {
                  handleSend(val);
               }
             }}
-            placeholder="Ask S.Ai a question..."
+            placeholder={`Ask S.Ai a question${placeholderDots}`}
           />
         </div>
       </div>
