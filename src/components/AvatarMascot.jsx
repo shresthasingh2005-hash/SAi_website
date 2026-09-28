@@ -158,7 +158,7 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
           style={{
             bottom: '100%',
             left: '50%',
-            transform: 'translateX(-50%)',
+            marginLeft: '-24px', // Shift bubble to the right to avoid left screen edge
             marginBottom: '16px',
             animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
             width: 'max-content',
@@ -166,8 +166,8 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
           }}
         >
           <div className="bg-[rgba(20,20,20,0.95)] backdrop-blur-md border border-[rgba(255,255,255,0.15)] text-[var(--text-primary)] text-sm rounded-2xl px-4 py-3 shadow-xl relative" style={{ lineHeight: '1.4' }}>
-            Hello, I am S.Ai, your personal health assistant, how may i help you?
-            <div className="absolute left-1/2 bottom-[-6px] w-3 h-3 bg-[rgba(20,20,20,0.95)] border-b border-r border-[rgba(255,255,255,0.15)] transform -translate-x-1/2 rotate-45" />
+            Hello, I am S.Ai, your personal health assistant, how may I help you?
+            <div className="absolute bottom-[-7px] w-3 h-3 bg-[rgba(20,20,20,0.95)] border-b border-r border-[rgba(255,255,255,0.15)] transform rotate-45" style={{ left: '18px' }} />
           </div>
         </div>
       )}
