@@ -694,7 +694,9 @@ export default function App() {
       setEditingMessageIndex(null);
       setEditInput('');
     } else {
-      newMessages = [...messages, { role: 'user', content: userMsgContent, attachments: attachmentsArray }];
+const _now = Date.now();
+      const _istNow = new Date(_now).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) + ' IST';
+      newMessages = [...messages, { role: 'user', content: userMsgContent, attachments: attachmentsArray, timestamp: _now, timestamp_IST: _istNow }];
     }
 
     let newTitle = activeSession.title;
@@ -702,7 +704,7 @@ export default function App() {
       newTitle = userMsgContent.substring(0, 30) + (userMsgContent.length > 30 ? '...' : '');
     }
 
-    const updatedSession = { id: activeSessionId, title: newTitle, messages: newMessages, updatedAt: Date.now() };
+    const _sessionTime = Date.now(); const _sessionTimeIST = new Date(_sessionTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) + ' IST'; const updatedSession = { id: activeSessionId, title: newTitle, messages: newMessages, updatedAt: _sessionTime, updatedAt_IST: _sessionTimeIST };
     setChatSessions(prev => prev.map(s => s.id === activeSessionId ? updatedSession : s));
     if (user) {
       saveSessionToFirestore(getUserId(user), updatedSession);
