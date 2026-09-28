@@ -4,7 +4,7 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange?style=flat-square&logo=firebase)
-![Gemini AI](https://img.shields.io/badge/Gemini-AI-blue?style=flat-square&logo=google)
+![AI Powered](https://img.shields.io/badge/AI-Powered-blue?style=flat-square)
 
 ---
 
@@ -43,42 +43,58 @@ graph TD
     
     subgraph Client [S.Ai Frontend]
         UI[📱 Next.js App Router]
-        Auth[🔒 Firebase Auth]
     end
     
-    subgraph Database [Storage & Context]
+    subgraph Storage [Persistent Storage & Context]
         Firestore[(🗂️ Firestore DB)]
-        Memory[(🧠 Pinecone Vector DB)]
+        Memory[(🧠 Vector DB)]
         HealthData[(🏥 My Health Data)]
     end
     
     subgraph Pipeline [S.Ai Intelligence Council]
         Router{🔀 Query Router}
-        Gemini[✨ Gemini AI]
-        Groq[⚡ Groq Llama-3]
-        Search[🌐 Tavily + Jina]
+        Refiner[✨ Query Refinement & Context Merge]
+        SysPrompt[📜 System Prompts & Guardrails]
+        
+        Primary[💻 Primary Node<br>Local Proxy]
+        Fallback1[☁️ Fallback Node 1]
+        Fallback2[⚡ Fallback Node 2]
+        
+        Search[🌐 Live Web Search]
     end
     
     UI -->|Queries| Router
-    UI -.->|Login| Auth
     UI -->|Save Chats| Firestore
     
-    Router -->|Retrieve History| Memory
-    Router -->|Read Records| HealthData
-    Router -.->|Fetch Web Info| Search
+    Router -->|Fetch History| Memory
+    Router -->|Fetch Records| HealthData
+    Router -.->|Search Live Data| Search
     
-    Router -->|Primary Engine| Gemini
-    Router -->|Fallback/Fast| Groq
+    Router --> Refiner
+    Memory --> Refiner
+    HealthData --> Refiner
+    Search -.-> Refiner
     
-    Gemini -->|Response| UI
-    Groq -->|Response| UI
+    Refiner --> SysPrompt
+    SysPrompt --> Primary
+    
+    Primary -->|On Failure| Fallback1
+    Fallback1 -->|On Failure| Fallback2
+    
+    Primary -->|Final Output| UI
+    Fallback1 -->|Final Output| UI
+    Fallback2 -->|Final Output| UI
     
     %% Styling
     style UI fill:#9B72CB,stroke:#fff,stroke-width:2px,color:#fff
-    style Gemini fill:#ff4b4b,stroke:#fff,stroke-width:2px,color:#fff
-    style Groq fill:#222,stroke:#fff,stroke-width:2px,color:#fff
-    style Firestore fill:#F5820D,stroke:#fff,stroke-width:2px,color:#fff
-    style Memory fill:#00A67E,stroke:#fff,stroke-width:2px,color:#fff
+    style Refiner fill:#ff4b4b,stroke:#fff,stroke-width:2px,color:#fff
+    style SysPrompt fill:#444,stroke:#fff,stroke-width:2px,color:#fff
+    style Primary fill:#00A67E,stroke:#fff,stroke-width:2px,color:#fff
+    style Fallback1 fill:#F5820D,stroke:#fff,stroke-width:2px,color:#fff
+    style Fallback2 fill:#F5820D,stroke:#fff,stroke-width:2px,color:#fff
+    style Firestore fill:#222,stroke:#fff,stroke-width:2px,color:#fff
+    style Memory fill:#222,stroke:#fff,stroke-width:2px,color:#fff
+    style HealthData fill:#222,stroke:#fff,stroke-width:2px,color:#fff
 ```
 
 The AI system uses a **custom system prompt** to shape personality, tone, health expertise, and language behaviour. The prompt's contents are intentionally kept private — no internal instructions, persona rules, or API configurations are exposed publicly.
@@ -89,7 +105,7 @@ The AI system uses a **custom system prompt** to shape personality, tone, health
 
 ### Initial Commit — *June 18, 2026*
 - Project inception — a developer built S.Ai for someone very special in his life
-- First working prototype with Gemini AI
+- First working prototype with intelligent AI engine
 - Basic chat interface with login and Pinecone memory
 
 ### Beta v1.0.0 — *June 30, 2026*
@@ -100,7 +116,7 @@ The AI system uses a **custom system prompt** to shape personality, tone, health
 
 ### Major Update v2.0 — *September 18, 2026*
 - Complete UI overhaul — premium dark design with plasma gradients
-- Multi-model LLM Council (Gemini + Groq/Llama-3)
+- Multi-model LLM Council (Local Proxy + Cloud Fallbacks)
 - Local proxy support (ngrok, localtunnel, Cloudflare Tunnel)
 - Real-time web search via Tavily + Jina
 - Attachment support: images, PDFs, DOCX, TXT, CSV
@@ -116,7 +132,7 @@ The AI system uses a **custom system prompt** to shape personality, tone, health
 
 - **Framework:** Next.js 16 (App Router, Turbopack)
 - **UI:** React, Framer Motion, Lucide Icons, Custom CSS
-- **AI:** Google Gemini AI SDK, Groq API
+- **AI:** Multi-model AI Framework
 - **Database:** Firebase Firestore
 - **Auth:** Firebase Authentication (Google Sign-In)
 - **Vector Memory:** Pinecone
