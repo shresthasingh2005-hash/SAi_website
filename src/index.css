@@ -408,9 +408,9 @@ input::placeholder, textarea::placeholder {
 }
 @media (max-width: 768px) {
   .settings-modal-inner {
-    height: 90vh !important;
+    height: 70vh !important;
     min-height: unset !important;
-    max-height: 92vh !important;
+    max-height: 75vh !important;
     overflow: hidden !important;
     display: flex;
     flex-direction: column;
