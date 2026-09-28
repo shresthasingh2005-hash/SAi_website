@@ -43,12 +43,14 @@ function getCaretCoordinates(element, position) {
 export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, isThinking }) {
   const [caretPos, setCaretPos] = useState({ left: 0, top: 0 });
   const [showAvatar, setShowAvatar] = useState(false);
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
 
   useEffect(() => {
     if (isFocused || value.length > 0 || isThinking) {
       setShowAvatar(true);
     } else {
       setShowAvatar(false);
+      setShowSpeechBubble(false);
     }
   }, [isFocused, value, isThinking]);
 
@@ -142,9 +144,40 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
             60%, 85% { opacity: 1; transform: scale(1); }
             90%, 100% { opacity: 0; transform: scale(0.8); }
           }
+          @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
         `}
       </style>
-      <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-end justify-center">
+      
+      {/* Speech Bubble */}
+      {showSpeechBubble && (
+        <div 
+          className="absolute z-50 pointer-events-none"
+          style={{
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: '16px',
+            animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            width: 'max-content',
+            maxWidth: '220px'
+          }}
+        >
+          <div className="bg-[rgba(20,20,20,0.95)] backdrop-blur-md border border-[rgba(255,255,255,0.15)] text-[var(--text-primary)] text-sm rounded-2xl px-4 py-3 shadow-xl relative" style={{ lineHeight: '1.4' }}>
+            Hello, I am S.Ai, your personal health assistant, how may i help you?
+            <div className="absolute left-1/2 bottom-[-6px] w-3 h-3 bg-[rgba(20,20,20,0.95)] border-b border-r border-[rgba(255,255,255,0.15)] transform -translate-x-1/2 rotate-45" />
+          </div>
+        </div>
+      )}
+
+      <div 
+        className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-end justify-center pointer-events-auto cursor-pointer"
+        onMouseEnter={() => setShowSpeechBubble(true)}
+        onMouseLeave={() => setShowSpeechBubble(false)}
+        onClick={() => setShowSpeechBubble(!showSpeechBubble)}
+      >
         {isThinking && (
           <>
             <div className="absolute rounded-full bg-white opacity-90 shadow-sm" style={{ width: '5px', height: '5px', top: '0px', right: '12px', animation: 'thoughtDot1 2.5s infinite' }} />
