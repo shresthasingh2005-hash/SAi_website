@@ -1363,8 +1363,8 @@ const _now = Date.now();
                       
                       {msg.role === 'user' && (
                         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                          {user && myData?.gender ? (
-                            <img src={myData?.gender === 'female' ? '/avatar_user_female.jpg' : '/avatar_user_male.jpg'} alt="User Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {user && (myData?.gender || myData?.Gender) ? (
+                            <img src={(myData?.gender?.toLowerCase() === 'female' || myData?.Gender?.toLowerCase() === 'female') ? '/avatar_user_female.jpg' : '/avatar_user_male.jpg'} alt="User Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <User size={20} color="var(--text-secondary)" />
                           )}
