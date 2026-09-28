@@ -46,13 +46,13 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
 
   useEffect(() => {
-    if (isFocused || value.length > 0 || isThinking) {
+    if (isFocused || value.length > 0 || isThinking || showSpeechBubble) {
       setShowAvatar(true);
     } else {
       setShowAvatar(false);
       setShowSpeechBubble(false);
     }
-  }, [isFocused, value, isThinking]);
+  }, [isFocused, value, isThinking, showSpeechBubble]);
 
   useEffect(() => {
     if (!textareaRef || !textareaRef.current) return;
@@ -165,7 +165,7 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
             maxWidth: '220px'
           }}
         >
-          <div className="bg-[rgba(20,20,20,0.95)] backdrop-blur-md border border-[rgba(255,255,255,0.15)] text-[var(--text-primary)] text-sm rounded-2xl px-4 py-3 shadow-xl relative" style={{ lineHeight: '1.4' }}>
+          <div className="bg-[rgba(20,20,20,0.95)] backdrop-blur-md border border-[rgba(255,255,255,0.15)] text-[var(--text-primary)] text-sm rounded-2xl px-5 py-3.5 shadow-xl relative" style={{ lineHeight: '1.5' }}>
             Hello, I am S.Ai, your personal health assistant, how may I help you?
             <div className="absolute bottom-[-7px] w-3 h-3 bg-[rgba(20,20,20,0.95)] border-b border-r border-[rgba(255,255,255,0.15)] transform rotate-45" style={{ left: '18px' }} />
           </div>
@@ -176,7 +176,10 @@ export default function AvatarMascot({ isTyping, textareaRef, isFocused, value, 
         className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-end justify-center pointer-events-auto cursor-pointer"
         onMouseEnter={() => setShowSpeechBubble(true)}
         onMouseLeave={() => setShowSpeechBubble(false)}
-        onClick={() => setShowSpeechBubble(!showSpeechBubble)}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          setShowSpeechBubble(!showSpeechBubble);
+        }}
       >
         {isThinking && (
           <>
