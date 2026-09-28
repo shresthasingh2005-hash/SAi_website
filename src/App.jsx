@@ -1541,7 +1541,7 @@ export default function App() {
                     <>
                       <div style={{ marginBottom: '24px' }}>
                         <h3 style={{ fontSize: '1.4rem', color: 'var(--text-primary)', margin: 0, textTransform: 'capitalize', display: 'flex', alignItems: 'center' }}><button className="mobile-only-btn" onClick={() => setActiveSettingView('menu')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', marginRight: '12px', cursor: 'pointer' }}><ChevronLeft size={24} /></button>
-                          <span>{view === 'mydata' ? 'My Data' : view === 'myhealthdata' ? 'My Health Data' : view === 'archivedchats' ? 'Archived Chats' : view === 'chatbin' ? 'ChatBin' : view === 'connectwithhealthify' ? 'Connect with Healthify' : view === 'aboutsai' ? 'About S.Ai' : view}</span>
+                          <span>{view === 'mydata' ? 'My Data' : view === 'myhealthdata' ? 'My Health Data' : view === 'archivedchats' ? 'Archived Chats' : view === 'chatbin' ? 'ChatBin' : view === 'connectwithhealthify' ? 'Connect with Healthify' : view === 'abouts.ai' ? 'About S.Ai' : view}</span>
                         </h3>
                         {view === 'chatbin' && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '8px 0 0 0' }}>Deleted chats will remain here for 72 hours.</p>}
                       </div>
@@ -1813,7 +1813,7 @@ export default function App() {
                         </div>
                       )}
 
-                      {view === 'aboutsai' && (
+                      {view === 'abouts.ai' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', paddingBottom: '16px' }}>
                           {/* Hero */}
                           <div style={{ textAlign: 'center', padding: '28px 16px', background: 'linear-gradient(135deg, rgba(255,75,75,0.08), rgba(155,114,203,0.08))', borderRadius: '20px', border: '1px solid rgba(155,114,203,0.15)' }}>
