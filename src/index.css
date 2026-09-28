@@ -408,16 +408,26 @@ input::placeholder, textarea::placeholder {
 }
 @media (max-width: 768px) {
   .settings-modal-inner {
-    height: 65vh !important;
-    min-height: 400px !important;
+    height: 90vh !important;
+    min-height: unset !important;
+    max-height: 92vh !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
   }
   .settings-sidebar {
     width: 100% !important;
     border-right: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1;
   }
   .settings-content {
     width: 100% !important;
     padding: 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1;
   }
   .mobile-hidden {
     display: none !important;
