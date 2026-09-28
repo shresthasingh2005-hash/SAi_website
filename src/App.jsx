@@ -1650,7 +1650,7 @@ const _now = Date.now();
                           {/* My Avatar */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
                             onClick={() => {
-                              let avatarSrc = user?.photoURL || '';
+                              let avatarSrc = null;
                               const gender = myData?.Gender?.toLowerCase();
                               if (gender === 'male' || gender === 'boy') avatarSrc = '/avatar_user_male.jpg';
                               else if (gender === 'female' || gender === 'girl') avatarSrc = '/avatar_user_female.jpg';
@@ -1670,7 +1670,7 @@ const _now = Date.now();
                             <span style={{ color: 'var(--text-secondary)' }}>My Avatar</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               {(() => {
-                                let avatarSrc = user?.photoURL || '';
+                                let avatarSrc = null;
                                 const gender = myData?.Gender?.toLowerCase();
                                 if (gender === 'male' || gender === 'boy') avatarSrc = '/avatar_user_male.jpg';
                                 else if (gender === 'female' || gender === 'girl') avatarSrc = '/avatar_user_female.jpg';
