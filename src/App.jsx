@@ -200,6 +200,7 @@ export default function App() {
           try {
             const profileData = await loadUserProfileData(getUserId(activeUser));
             if (profileData && profileData.name) {
+              if (activeUser.email && !profileData.email) { profileData.email = activeUser.email; try { await saveUserProfileData(getUserId(activeUser), profileData); } catch(e){} }
               setMyData(profileData);
             } else {
               if (activeUser.email) { setOnboardingData(prev => ({ ...prev, email: activeUser.email })); }
