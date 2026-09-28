@@ -336,6 +336,10 @@ input::placeholder, textarea::placeholder {
 }
 
 @media (max-width: 768px) {
+  .settings-modal-inner {
+    height: 65vh !important;
+    min-height: 400px !important;
+  }
   .left-nav-rail {
     display: none !important;
   }
@@ -403,6 +407,10 @@ input::placeholder, textarea::placeholder {
   display: none !important;
 }
 @media (max-width: 768px) {
+  .settings-modal-inner {
+    height: 65vh !important;
+    min-height: 400px !important;
+  }
   .settings-sidebar {
     width: 100% !important;
     border-right: none !important;
