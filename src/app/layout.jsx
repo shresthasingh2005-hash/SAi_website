@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Buddy LLM - Advanced AI Pipeline',
-  description: '6-Layer Autonomous AI Architecture',
+  title: 'S.Ai - Personal Health Assistant',
+  description: 'Your advanced AI health companion',
 };
 
 export default function RootLayout({ children }) {
