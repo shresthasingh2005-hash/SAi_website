@@ -1483,7 +1483,7 @@ export default function App() {
                 <X size={18} />
               </button>
               {/* Left Sidebar Pane */}
-              <div className={`settings-sidebar ${activeSettingView !== 'menu' ? 'mobile-hidden' : ''}`} style={{ background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.08)', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <div className={"settings-sidebar " + (activeSettingView !== 'menu' ? 'mobile-hidden' : '')} style={{ background: 'rgba(0,0,0,0.2)', borderRight: '1px solid rgba(255,255,255,0.08)', padding: '24px', display: 'flex', flexDirection: 'column' }}>
                 <h3 style={{ marginBottom: '24px', fontSize: '1.2rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Settings size={20} /> Settings
                 </h3>
@@ -1516,7 +1516,7 @@ export default function App() {
               </div>
 
               {/* Right Content Pane */}
-              <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }} className={`prompt-scrollbar settings-content ${activeSettingView === 'menu' ? 'mobile-hidden' : ''}`}>
+              <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }} className={"prompt-scrollbar settings-content " + (activeSettingView === 'menu' ? 'mobile-hidden' : '')}>
                 {(() => {
                   if (activeSettingView === 'menu') {
                     return (
