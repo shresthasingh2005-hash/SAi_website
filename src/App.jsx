@@ -1650,8 +1650,13 @@ const _now = Date.now();
                           {/* My Avatar */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
                             onClick={() => {
-                              const avatarHtml = user?.photoURL 
-                                ? `<img src="${user.photoURL}" style="width:160px;height:160px;border-radius:50%;object-fit:cover;box-shadow:0 0 60px rgba(155,114,203,0.5);margin:0 auto 24px;" alt="Avatar" />` 
+                              let avatarSrc = user?.photoURL || '';
+                              const gender = myData?.Gender?.toLowerCase();
+                              if (gender === 'male' || gender === 'boy') avatarSrc = '/avatar_user_male.jpg';
+                              else if (gender === 'female' || gender === 'girl') avatarSrc = '/avatar_user_female.jpg';
+
+                              const avatarHtml = avatarSrc 
+                                ? `<img src="${avatarSrc}" style="width:160px;height:160px;border-radius:50%;object-fit:cover;box-shadow:0 0 60px rgba(155,114,203,0.5);margin:0 auto 24px;" alt="Avatar" />` 
                                 : `<div style="width:160px;height:160px;background:linear-gradient(135deg,#ff4b4b,#9B72CB);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:80px;font-weight:900;color:white;font-family:Outfit,sans-serif;box-shadow:0 0 60px rgba(155,114,203,0.5);margin:0 auto 24px;">${user?.displayName?.charAt(0)?.toUpperCase() || 'S'}</div>`;
                                 
                               const nameHtml = user?.displayName ? user.displayName : 'S.Ai Personal Health Assistant';
@@ -1664,13 +1669,20 @@ const _now = Date.now();
                           >
                             <span style={{ color: 'var(--text-secondary)' }}>My Avatar</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {user?.photoURL ? (
-                                <img src={user.photoURL} alt="Avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 0 12px rgba(155,114,203,0.5)' }} />
-                              ) : (
-                                <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #ff4b4b, #9B72CB)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 900, color: 'white', boxShadow: '0 0 12px rgba(155,114,203,0.5)' }}>
-                                  {user?.displayName?.charAt(0)?.toUpperCase() || 'S'}
-                                </div>
-                              )}
+                              {(() => {
+                                let avatarSrc = user?.photoURL || '';
+                                const gender = myData?.Gender?.toLowerCase();
+                                if (gender === 'male' || gender === 'boy') avatarSrc = '/avatar_user_male.jpg';
+                                else if (gender === 'female' || gender === 'girl') avatarSrc = '/avatar_user_female.jpg';
+
+                                return avatarSrc ? (
+                                  <img src={avatarSrc} alt="Avatar" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 0 12px rgba(155,114,203,0.5)' }} />
+                                ) : (
+                                  <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #ff4b4b, #9B72CB)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 900, color: 'white', boxShadow: '0 0 12px rgba(155,114,203,0.5)' }}>
+                                    {user?.displayName?.charAt(0)?.toUpperCase() || 'S'}
+                                  </div>
+                                );
+                              })()}
                               <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>Tap to view</span>
                             </div>
                           </div>
